@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lo Shu · Interactive Magic Square</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,560;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #FAF6EE;
+  --paper-deep: #F2ECDF;
+  --ink: #211D17;
+  --ink-soft: #6E6555;
+  --cinnabar: #AE3B26;
+  --cinnabar-deep: #8C2D1C;
+  --hair: rgba(33,29,23,.16);
+  --hair-soft: rgba(33,29,23,.08);
+  --ease-out: cubic-bezier(.22,1,.36,1);
+  --ease-brush: cubic-bezier(.65,0,.35,1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.frame { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px) 96px; }
+
+/* ============ MASTHEAD ============ */
+header {
+  padding: clamp(28px, 5vh, 52px) 0 26px;
+  border-bottom: 1px solid var(--ink);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+}
+.masthead-left { display: flex; align-items: baseline; gap: 22px; }
+h1 {
+  font-family: 'Fraunces', serif; font-optical-sizing: auto;
+  font-weight: 560; font-size: clamp(44px, 7vw, 76px); letter-spacing: -.02em; line-height: .92;
+}
+.hanzi {
+  font-size: clamp(20px, 2.6vw, 28px); color: var(--cinnabar);
+  writing-mode: vertical-rl; letter-spacing: .35em; line-height: 1;
+  transform: translateY(-4px); font-weight: 500;
+}
+.masthead-note {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-soft);
+  max-width: 380px; letter-spacing: .01em; line-height: 1.6;
+}
+.masthead-note b { color: var(--ink); font-weight: 500; }
+
+/* ============ VIEW SWITCH ============ */
+.switch { display: inline-flex; border: 1px solid var(--ink); margin: 28px 0 0; }
+.switch button {
+  appearance: none; border: 0; background: transparent; color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 10px 22px; cursor: pointer; transition: background .25s var(--ease-out), color .25s var(--ease-out);
+}
+.switch button+button { border-left: 1px solid var(--ink); }
+.switch button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+.switch button:disabled { color: var(--hair); cursor: not-allowed; }
+.switch button:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
+
+/* ============ LAYOUT ============ */
+.stage {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(32px, 5vw, 64px);
+  margin-top: 40px;
+  align-items: start;
+}
+.main-content { min-width: 0; }
+.grid-column {
+  position: sticky;
+  top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+@media(max-width: 900px) {
+  .stage { grid-template-columns: 1fr; }
+  .grid-column {
+    position: static;
+    order: -1;
+    margin-bottom: 24px;
+  }
+}
+
+/* ============ INPUT VIEW ============ */
+#input-view { display: block; }
+.rail .eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 14px;
+}
+.field-row { display: flex; gap: 14px; margin-bottom: 18px; }
+.field { flex: 1; }
+.field label {
+  display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px;
+}
+.field input {
+  width: 100%; background: transparent; border: 0; border-bottom: 1.5px solid var(--ink);
+  font-family: 'Fraunces', serif; font-size: 34px; font-weight: 400; color: var(--ink);
+  padding: 2px 0 6px; border-radius: 0;
+}
+.field input:focus { outline: none; border-bottom-color: var(--cinnabar); }
+.field input::placeholder { color: var(--hair); }
+.field input::-webkit-outer-spin-button, .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.field input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+.months { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 22px; }
+.months button {
+  appearance: none; background: transparent; border: 1px solid var(--hair);
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em;
+  color: var(--ink-soft); padding: 8px 0; cursor: pointer;
+  transition: all .18s var(--ease-out);
+}
+.months button:hover { border-color: var(--ink); color: var(--ink); }
+.months button.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.months button:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 1px; }
+
+.cast {
+  width: 100%; appearance: none; border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper);
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: .16em; text-transform: uppercase;
+  padding: 15px 0; cursor: pointer; transition: all .22s var(--ease-out); margin-top: 10px;
+}
+.cast:hover { background: var(--cinnabar); border-color: var(--cinnabar); }
+.cast:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 3px; }
+
+.btn-secondary {
+  background: transparent !important;
+  border: 1.5px solid var(--ink) !important;
+  color: var(--ink) !important;
+}
+.btn-secondary:hover {
+  background: var(--hair-soft) !important;
+}
+
+.err {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--cinnabar);
+  margin-top: 12px; min-height: 18px;
+}
+
+/* Calculation Options Checkboxes */
+.calc-options {
+  border-top: 1px solid var(--hair-soft);
+  padding-top: 18px;
+  margin: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  user-select: none;
+}
+.checkbox-container input {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--cinnabar);
+}
+.checkbox-container:hover {
+  color: var(--ink);
+}
+
+/* Seals */
+.seals { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; opacity: 0; transition: opacity .4s; }
+.seals.show { opacity: 1; }
+.seal {
+  flex: 1 1 100px; min-width: 100px; border: 2px solid var(--cinnabar); padding: 14px 12px 11px; position: relative;
+  transform: scale(1.35) rotate(-4deg); opacity: 0;
+}
+.seal.stamped { animation: stamp .5s var(--ease-out) forwards; }
+@keyframes stamp {
+  0% { transform: scale(1.35) rotate(-4deg); opacity: 0; }
+  62% { transform: scale(.96) rotate(.6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.seal .k {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--cinnabar); margin-bottom: 2px;
+}
+.seal .n { font-family: 'Fraunces', serif; font-size: 34px; font-weight: 560; color: var(--cinnabar); line-height: 1; }
+.seal .p { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-soft); margin-top: 4px; }
+.seal::after { content: ""; position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; background: var(--paper); }
+
+/* ============ GRID ============ */
+.gridwrap { position: relative; max-width: 520px; margin: 0 auto; width: 100%; }
+.grid-title {
+  display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft);
+}
+.grid-title .date-echo { color: var(--cinnabar); }
+.loshu {
+  position: relative; display: grid; grid-template-columns: repeat(3, 1fr);
+  border: 1.5px solid var(--ink); background: var(--paper-deep);
+  aspect-ratio: 1;
+}
+.cell {
+  border: .75px solid var(--hair); position: relative; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px; padding: 8px;
+  opacity: 0; transform: translateY(10px) scale(.96);
+  transition: background 0.3s var(--ease-out), border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.cell.in { animation: cellin .55s var(--ease-out) forwards; }
+@keyframes cellin { to { opacity: 1; transform: none; } }
+.cell .num {
+  font-family: 'Fraunces', serif; font-weight: 560; line-height: 1;
+  font-size: clamp(38px, 6.5vw, 58px);
+  pointer-events: none;
+}
+.cell.absent .num { color: transparent; -webkit-text-stroke: 1px var(--hair); font-weight: 400; }
+.cell .count-tag {
+  position: absolute; top: 8px; right: 10px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--cinnabar);
+  pointer-events: none;
+}
+.cell .count-tag.hot { font-weight: 500; border-bottom: 1px solid var(--cinnabar); }
+.dots { display: grid; gap: 5px; min-height: 12px; pointer-events: none; }
+.dots.d1 { grid-template-columns: repeat(1, auto); }
+.dots.d2, .dots.d4 { grid-template-columns: repeat(2, auto); }
+.dots.d3 { grid-template-columns: repeat(3, auto); }
+.dots.d5, .dots.d6 { grid-template-columns: repeat(3, auto); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); transform: scale(0); }
+.dot.pop { animation: pop .34s var(--ease-out) forwards; }
+@keyframes pop { 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.cell.absent .dots { display: none; }
+
+/* Grid cell highlighting */
+.cell.highlight {
+  background: rgba(174, 59, 38, 0.08);
+  border-color: var(--cinnabar);
+  box-shadow: inset 0 0 10px rgba(174, 59, 38, 0.15);
+  transform: scale(1.02);
+  z-index: 2;
+}
+
+/* Grid cell hover tooltips */
+.cell-tooltip {
+  visibility: hidden; opacity: 0; position: absolute; z-index: 100;
+  width: 250px; background: var(--paper-deep); color: var(--ink);
+  border: 1.5px solid var(--ink); padding: 12px; border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(33,29,23,.18);
+  font-family: 'Inter', system-ui, sans-serif; font-size: 12px; line-height: 1.45;
+  pointer-events: none; text-align: left;
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out), visibility 0.25s;
+}
+.cell-tooltip strong { display: block; font-family: 'Fraunces', serif; font-size: 14px; color: var(--cinnabar); margin-bottom: 4px; }
+.cell-tooltip hr { border: 0; border-top: 1px solid var(--hair); margin: 8px 0; }
+.cell-tooltip p { margin-bottom: 4px; }
+.cell-tooltip p:last-child { margin-bottom: 0; }
+
+/* Adjust tooltip position to prevent clipping */
+.cell:nth-child(1) .cell-tooltip, .cell:nth-child(2) .cell-tooltip, .cell:nth-child(3) .cell-tooltip {
+  top: 105%; left: 50%; transform: translateX(-50%) translateY(-8px);
+}
+.cell:nth-child(1):hover .cell-tooltip, .cell:nth-child(2):hover .cell-tooltip, .cell:nth-child(3):hover .cell-tooltip {
+  visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0);
+}
+.cell:nth-child(4) .cell-tooltip, .cell:nth-child(5) .cell-tooltip, .cell:nth-child(6) .cell-tooltip,
+.cell:nth-child(7) .cell-tooltip, .cell:nth-child(8) .cell-tooltip, .cell:nth-child(9) .cell-tooltip {
+  bottom: 105%; left: 50%; transform: translateX(-50%) translateY(8px);
+}
+.cell:nth-child(4):hover .cell-tooltip, .cell:nth-child(5):hover .cell-tooltip, .cell:nth-child(6):hover .cell-tooltip,
+.cell:nth-child(7):hover .cell-tooltip, .cell:nth-child(8):hover .cell-tooltip, .cell:nth-child(9):hover .cell-tooltip {
+  visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0);
+}
+
+.strokes { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 3; }
+.strokes line {
+  stroke: var(--cinnabar); stroke-width: 10; stroke-linecap: round; opacity: .45;
+  mix-blend-mode: multiply; stroke-dasharray: 1000; stroke-dashoffset: 1000;
+  transition: stroke-width 0.3s, opacity 0.3s, filter 0.3s;
+}
+.strokes line.draw { animation: brush 1s var(--ease-brush) forwards; }
+@keyframes brush { to { stroke-dashoffset: 0; } }
+
+.strokes line.highlight {
+  stroke-width: 16;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 6px rgba(174, 59, 38, 0.4));
+}
+
+.plane-legend {
+  margin-top: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--ink-soft);
+  min-height: 20px; opacity: 0; transition: opacity .5s;
+}
+.plane-legend.show { opacity: 1; }
+.plane-legend b { color: var(--cinnabar); font-weight: 500; }
+
+.empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif; font-size: 17px; font-style: italic; color: var(--ink-soft);
+  text-align: center; padding: 32px; transition: opacity .3s;
+}
+.empty.hide { opacity: 0; pointer-events: none; }
+
+/* ============ ELEMENT BALANCE WIDGET ============ */
+.element-balance {
+  margin-top: 12px;
+  border-top: 1px solid var(--hair);
+  padding-top: 18px;
+}
+.element-balance .eyebrow {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 12px;
+}
+.element-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.el-bar-row {
+  display: grid;
+  grid-template-columns: 85px 1fr 24px;
+  align-items: center;
+  gap: 10px;
+}
+.el-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.el-bar-count {
+  font-weight: 600;
+  color: var(--cinnabar);
+  margin-right: 4px;
+}
+.el-bar-track {
+  height: 8px;
+  background: var(--hair-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.el-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  width: 0;
+  transition: width 0.6s var(--ease-out);
+}
+
+/* ============ READING VIEW ============ */
+#reading-view { display: none; }
+.reading-head { margin: 10px 0 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.reading-head h2 { font-family: 'Fraunces', serif; font-weight: 560; font-size: clamp(30px, 4.4vw, 44px); letter-spacing: -.015em; }
+.reading-head .mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--cinnabar); letter-spacing: .1em; }
+.synth {
+  font-family: 'Fraunces', serif; font-size: clamp(18px, 2.3vw, 22px); font-weight: 300; line-height: 1.5;
+  max-width: 62ch; margin: 18px 0 44px; border-left: 2px solid var(--cinnabar); padding-left: 22px;
+}
+.rsec { margin-bottom: 44px; opacity: 0; transform: translateY(14px); }
+.rsec.rin { animation: rin .6s var(--ease-out) forwards; }
+@keyframes rin { to { opacity: 1; transform: none; } }
+.rsec h3 {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink-soft); border-bottom: 1px solid var(--hair); padding-bottom: 8px; margin-bottom: 20px; font-weight: 500;
+}
+
+/* Entries */
+.entry {
+  display: grid; grid-template-columns: 110px 1fr; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--hair-soft);
+  transition: background-color 0.25s var(--ease-out), padding-left 0.25s var(--ease-out);
+}
+.entry:last-child { border-bottom: 0; }
+.entry:hover {
+  background-color: rgba(33, 29, 23, 0.015);
+  padding-left: 8px;
+}
+.entry .lead { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 560; line-height: 1.1; position: relative; }
+.entry .lead small {
+  display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-soft); font-weight: 400; margin-top: 3px;
+}
+.entry p { color: var(--ink); max-width: 64ch; font-size: 14.5px; line-height: 1.6; }
+.entry p .mech { color: var(--ink-soft); font-size: 13px; display: block; margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+.entry p .watch {
+  display: block; margin-top: 8px; font-size: 13.5px; color: var(--cinnabar-deep);
+}
+.entry p .watch::before {
+  content: "watch"; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em;
+  text-transform: uppercase; border: 1px solid var(--cinnabar); padding: 1px 5px; margin-right: 8px;
+  color: var(--cinnabar); vertical-align: 1px;
+}
+.entry.growth .lead { color: transparent; -webkit-text-stroke: 1px var(--ink-soft); }
+.entry.plane .lead { color: var(--cinnabar); }
+.entry.voidp .lead { color: transparent; -webkit-text-stroke: 1px var(--cinnabar); }
+.badge {
+  display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .12em;
+  text-transform: uppercase; border: 1px solid var(--cinnabar); color: var(--cinnabar);
+  padding: 1px 6px; margin-left: 6px; vertical-align: 3px; line-height: 1.2;
+}
+
+/* ============ EXPLANATION "WHY" HOVER SYSTEM ============ */
+.why-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--cinnabar);
+  color: var(--cinnabar);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: help;
+  margin-left: 6px;
+  position: relative;
+  vertical-align: middle;
+  transition: background-color 0.2s, color 0.2s;
+  user-select: none;
+}
+.why-badge:hover {
+  background-color: var(--cinnabar);
+  color: var(--paper);
+}
+
+.why-tooltip {
+  visibility: hidden; opacity: 0; width: 280px; background: var(--paper-deep); color: var(--ink);
+  text-align: left; border: 1.5px solid var(--ink); padding: 12px; border-radius: 4px;
+  position: absolute; z-index: 120; bottom: 125%; left: 50%; transform: translateX(-50%) translateY(8px);
+  box-shadow: 0 8px 24px rgba(33,29,23,.18);
+  font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: normal; line-height: 1.45;
+  pointer-events: none; text-transform: none; letter-spacing: normal;
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out), visibility 0.25s;
+}
+.why-tooltip::after {
+  content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+  border-width: 5px; border-style: solid; border-color: var(--ink) transparent transparent transparent;
+}
+.why-tooltip strong { display: block; font-family: 'Fraunces', serif; color: var(--cinnabar); font-size: 13px; margin-bottom: 4px; }
+
+.why-badge:hover .why-tooltip {
+  visibility: visible; opacity: 1; transform: translateX(-50%) translateY(0);
+}
+
+.copy-btn {
+  appearance: none; background: transparent; border: 1.5px solid var(--cinnabar); color: var(--cinnabar);
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; padding: 6px 14px;
+  cursor: pointer; transition: all 0.25s var(--ease-out); text-transform: uppercase;
+}
+.copy-btn:hover {
+  background: var(--cinnabar);
+  color: var(--paper);
+}
+
+footer {
+  margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink);
+  font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-soft); letter-spacing: .04em;
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+@media(max-width: 600px) {
+  .entry { grid-template-columns: 80px 1fr; gap: 12px; }
+  .entry .lead { font-size: 21px; }
+  .months { grid-template-columns: repeat(4, 1fr); }
+}
+@media(prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s!important; transition-duration: .001s!important; }
+}
+
+/* ============ PRINT FRIENDLY STYLING ============ */
+@media print {
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+  }
+  body::before,
+  .switch,
+  .rail,
+  .calc-options,
+  .cast,
+  .btn-secondary,
+  .err,
+  footer,
+  .why-badge,
+  .copy-btn {
+    display: none !important;
+  }
+  .frame {
+    padding: 0;
+    max-width: 100%;
+  }
+  header {
+    border-bottom: 2px solid #000;
+    padding: 0 0 15px;
+  }
+  .stage {
+    display: block !important;
+  }
+  .grid-column {
+    page-break-inside: avoid;
+    margin-bottom: 40px;
+    position: static !important;
+  }
+  #reading-view {
+    display: block !important;
+  }
+  .entry {
+    page-break-inside: avoid;
+    border-bottom: 1px solid #DDD;
+  }
+}
+</style>
+</head>
+<body>
+<div class="frame">
+
+<header>
+  <div class="masthead-left">
+    <h1>Lo Shu</h1>
+    <div class="hanzi" aria-hidden="true">洛書</div>
+  </div>
+  <p class="masthead-note">The magic square carried from the Luo river, read through <b>Ank Jyotish</b>. Every digit of a birth date takes its fixed seat; the pattern of presence — and of excess and absence — is the reading.</p>
+</header>
+
+<div class="switch" role="tablist" aria-label="Views">
+  <button id="tab-grid" role="tab" aria-selected="true" onclick="showView('grid')">The Grid</button>
+  <button id="tab-read" role="tab" aria-selected="false" onclick="showView('reading')" disabled>The Reading</button>
+</div>
+
+<div class="stage">
+  <!-- Left Column: Inputs or Readings -->
+  <div class="main-content">
+    
+    <!-- ============ INPUT VIEW ============ -->
+    <section id="input-view">
+      <div class="rail">
+        <p class="eyebrow">Date of birth</p>
+        <div class="field-row">
+          <div class="field" style="flex: 0 0 92px">
+            <label for="dd">Day</label>
+            <input id="dd" type="number" inputmode="numeric" min="1" max="31" placeholder="29">
+          </div>
+          <div class="field" style="flex: 0 0 132px">
+            <label for="yyyy">Year</label>
+            <input id="yyyy" type="number" inputmode="numeric" min="1000" max="2100" placeholder="1988">
+          </div>
+        </div>
+        
+        <div class="field" style="margin-bottom:8px"><label>Month</label></div>
+        <div class="months" id="months" role="group" aria-label="Month"></div>
+        
+        <div class="field" style="margin-bottom:8px"><label>Kua basis</label></div>
+        <div class="months" id="sex" role="group" aria-label="Sex for Kua calculation" style="grid-template-columns:repeat(2,1fr)">
+          <button type="button" data-s="M">MALE</button>
+          <button type="button" data-s="F">FEMALE</button>
+        </div>
+        
+        <!-- Calculation toggles -->
+        <div class="calc-options">
+          <div class="field" style="margin-bottom: 2px;"><label>Grid Inclusions</label></div>
+          <label class="checkbox-container">
+            <input type="checkbox" id="inc-driver" checked>
+            Include Driver (Mulank)
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="inc-conductor" checked>
+            Include Conductor (Bhagyank)
+          </label>
+          <label class="checkbox-container">
+            <input type="checkbox" id="inc-kua" checked>
+            Include Kua Number
+          </label>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 10px;">
+          <button class="cast" onclick="cast()" style="margin-top: 0;">Cast Grid</button>
+          <button type="button" class="cast btn-secondary" onclick="loadDemo()" style="margin-top: 0;">Demo</button>
+        </div>
+        <button type="button" class="cast btn-secondary" onclick="resetForm()" style="margin-top: 10px; width: 100%;">Reset Grid</button>
+        
+        <p class="err" id="err" role="alert"></p>
+
+        <div class="seals" id="seals">
+          <div class="seal" id="seal-driver">
+            <div class="k">Driver · Mulank</div>
+            <div class="n" id="driver-n">–</div>
+            <div class="p" id="driver-p"></div>
+          </div>
+          <div class="seal" id="seal-cond">
+            <div class="k">Conductor · Bhagyank</div>
+            <div class="n" id="cond-n">–</div>
+            <div class="p" id="cond-p"></div>
+          </div>
+          <div class="seal" id="seal-kua">
+            <div class="k">Kua · 卦</div>
+            <div class="n" id="kua-n">–</div>
+            <div class="p" id="kua-p"></div>
+          </div>
+        </div>
+
+        <!-- The Legend of Lo Shu Box -->
+        <div class="legend-box" style="margin-top: 36px; border-top: 1px solid var(--ink); padding-top: 20px;">
+          <p class="eyebrow" style="margin-bottom: 8px;">The Legend of Lo Shu</p>
+          <p style="font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 8px;">
+            According to Chinese legend, around 4000 years ago, Emperor Yu saw a sacred turtle emerge from the flooded Luo River with a magic 3x3 pattern of dot-clusters on its shell.
+          </p>
+          <p style="font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;">
+            The dots represented numbers 1 to 9, arranged so that every row, column, and diagonal summed to exactly <b>15</b> — the length of each of the 24 cycles of the Chinese solar calendar. This grid became the foundation of Feng Shui and cosmic numerology.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- ============ READING VIEW ============ -->
+    <section id="reading-view">
+      <div class="reading-head">
+        <h2>The Reading</h2>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <span class="mono" id="reading-date" style="margin-right: 10px;"></span>
+          <button class="copy-btn" onclick="copyReading()">Copy Text</button>
+        </div>
+      </div>
+      <p class="synth" id="synth"></p>
+      
+      <div class="rsec" id="sec-seals">
+        <h3>The three seals</h3>
+        <div id="seal-entries"></div>
+      </div>
+      
+      <div class="rsec" id="sec-present">
+        <h3>Numbers present · dose makes the medicine</h3>
+        <div id="present-entries"></div>
+      </div>
+      
+      <div class="rsec" id="sec-planes">
+        <h3>Planes &amp; yogs · lines of force</h3>
+        <div id="plane-entries"></div>
+      </div>
+      
+      <div class="rsec" id="sec-growth">
+        <h3>Open channels · where capacity grows</h3>
+        <div id="growth-entries"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Right Column: Visual Lo Shu Grid & Element Balance -->
+  <div class="grid-column">
+    <div class="gridwrap">
+      <div class="grid-title">
+        <span>The square of nine</span>
+        <span class="date-echo" id="date-echo"></span>
+      </div>
+      <div class="loshu" id="loshu">
+        <div class="empty" id="empty">Enter a date of birth.<br>The grid assembles from its digits.</div>
+        <svg class="strokes" id="strokes" viewBox="0 0 300 300" preserveAspectRatio="none"></svg>
+      </div>
+      <p class="plane-legend" id="plane-legend"></p>
+    </div>
+    
+    <!-- Element Balance Section -->
+    <div class="element-balance" id="element-balance" style="display:none;">
+      <p class="eyebrow">Element Balance</p>
+      <div class="element-bars"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Lo Shu · Ank Jyotish planet mapping · maitri &amp; yog names vary by lineage — constants marked in source</span>
+  <span>A reading of pattern, not prediction</span>
+</footer>
+</div>
+
+<script>
+/* =====================================================================
+   INTERPRETATION DATABASE
+   ===================================================================== */
+const SQUARE = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const PLANETS = {
+  1: "Sun (Surya)",
+  2: "Moon (Chandra)",
+  3: "Jupiter (Guru)",
+  4: "Rahu",
+  5: "Mercury (Budha)",
+  6: "Venus (Shukra)",
+  7: "Ketu",
+  8: "Saturn (Shani)",
+  9: "Mars (Mangal)"
+};
+
+// Metadata for the hover explaining the "Why" behind cell values
+const WHY = {
+  1: {
+    element: "Water",
+    direction: "North",
+    area: "Career & Life Journey",
+    planet: "Sun (Surya)",
+    reason: "Water represents flow, communication, and adaptability. In Chinese numerology, the North governs your career path and life journey. A balanced presence of 1 helps you flow with life and communicate clearly, while a lack makes it hard to express emotions."
+  },
+  2: {
+    element: "Earth",
+    direction: "Southwest",
+    area: "Love, Marriage & Relationships",
+    planet: "Moon (Chandra)",
+    reason: "Earth represents stability, nurturing, and support. The Southwest direction rules marriage and partnerships. A presence of 2 indicates sensitivity, cooperation, and intuitive understanding of others in relationships."
+  },
+  3: {
+    element: "Wood",
+    direction: "East",
+    area: "Family, Health & Growth",
+    planet: "Jupiter (Guru)",
+    reason: "Wood represents organic growth, expansion, and memory. The East direction governs family ancestry and physical health. A presence of 3 gives you creative imagination, strong planning skills, and a desire to learn and expand."
+  },
+  4: {
+    element: "Wood",
+    direction: "Southeast",
+    area: "Wealth, Prosperity & Order",
+    planet: "Rahu",
+    reason: "Southeast Wood represents structured growth, organization, and practical details. It is the seat of financial wealth and systematic success. A presence of 4 grants discipline, practical skills, and attention to detail."
+  },
+  5: {
+    element: "Earth",
+    direction: "Center",
+    area: "Self, Balance & Core Stability",
+    planet: "Mercury (Budha)",
+    reason: "Sitting at the exact center of the grid, the Earth element rules core balance, freedom, and adaptability. It acts as an anchor for all other numbers. A presence of 5 gives you mental strength, motivation, and stability under stress."
+  },
+  6: {
+    element: "Metal",
+    direction: "Northwest",
+    area: "Helpful People & Travel",
+    planet: "Venus (Shukra)",
+    reason: "Northwest Metal represents structured support, authority, and mentors (helpful people) who assist you in life. It also governs home life, beauty, and creative responsibilities. A presence of 6 brings helper luck and domestic care."
+  },
+  7: {
+    element: "Metal",
+    direction: "West",
+    area: "Children, Creativity & Wisdom",
+    planet: "Ketu",
+    reason: "West Metal represents maturity, refinement, and spiritual learning. In the Lo Shu Grid, it represents learning wisdom through personal experiences, trials, and lessons, as well as creative expression."
+  },
+  8: {
+    element: "Earth",
+    direction: "Northeast",
+    area: "Knowledge, Education & Wisdom",
+    planet: "Saturn (Shani)",
+    reason: "Northeast Earth represents static strength, like a mountain. It governs education, intellect, and the slow, steady acquisition of knowledge. It teaches patience, self-discipline, and deep thinking."
+  },
+  9: {
+    element: "Fire",
+    direction: "South",
+    area: "Fame, Reputation & Recognition",
+    planet: "Mars (Mangal)",
+    reason: "Fire is bright, warm, and visible to all. The South rules how you present yourself to the world, representing fame, respect, and social recognition. A presence of 9 brings energy, ambition, and a drive to succeed."
+  }
+};
+
+/* ---- Simplified, count-calibrated readings in simple English ---- */
+const REPEAT = {
+  1: {
+    1: { l: "You express yourself well but also listen to others. You are comfortable sharing your views in a balanced way.", w: "" },
+    2: { l: "You are excellent at communication, both in speech and writing. You easily see both sides of a discussion.", w: "" },
+    3: { l: "You are highly talkative, full of ideas, and expressive. You may talk a lot to explain your thoughts to others.", w: "Sometimes you might talk instead of making a concrete decision, or speak before thinking." },
+    4: { l: "You have a deep, active inner world. You understand yourself well but find it difficult to show your true self to others.", w: "You may feel misunderstood or isolated. Having a creative outlet like writing or art is essential to express your thoughts." }
+  },
+  2: {
+    1: { l: "You are sensitive and intuitive. You easily pick up on the moods and feelings of people around you.", w: "" },
+    2: { l: "You are highly intuitive and empathetic. You read people accurately and make a very supportive partner or friend.", w: "" },
+    3: { l: "You are extremely sensitive. You easily absorb the stress and emotions of other people as if they were your own.", w: "This emotional sensitivity can lead to mood swings. Setting emotional boundaries is highly recommended." },
+    4: { l: "You feel emotions at a very deep level. You are easily hurt by criticism and can feel overwhelmed by crowds.", w: "You need regular quiet time alone to recharge. Avoid absorbing everyone else's worries." }
+  },
+  3: {
+    1: { l: "You have a good imagination and learn new things quickly. You are naturally curious and enjoy sharing knowledge.", w: "" },
+    2: { l: "You have a sharp, analytical, and creative mind. You are excellent at writing, planning, and organizing concepts.", w: "" },
+    3: { l: "Your imagination is incredibly active. You are a big dreamer, full of ideas for new projects.", w: "You might start many things at once but find it hard to finish them. Focus on execution rather than just planning." },
+    4: { l: "Your mind is constantly running with ideas and plans. You are highly creative but can get lost in details.", w: "This can lead to anxiety or overthinking. Channel your thoughts into structured hobbies to stay grounded." }
+  },
+  4: {
+    1: { l: "You are practical, organized, and reliable. You prefer hands-on, realistic work over abstract planning.", w: "" },
+    2: { l: "You are very disciplined and patient. You enjoy organizing systems, schedules, and building projects step-by-step.", w: "" },
+    3: { l: "You are an exceptionally hard worker who values discipline. You look at life through a practical lens.", w: "You can be stubborn or rigid, focusing too much on work and order. Remember to make time for fun and relaxation." },
+    4: { l: "You have relentless discipline and work ethic, organizing details with extreme care.", w: "High risk of burnout and physical strain. You must learn to delegate and relax, as rest is just as important as work." }
+  },
+  5: {
+    1: { l: "You are emotionally balanced, adaptable, and steady. You talk and connect easily with all kinds of people.", w: "" },
+    2: { l: "You have strong determination and drive. You are an excellent mediator and a natural motivator.", w: "" },
+    3: { l: "You are dynamic, love freedom, and are willing to take risks. You enjoy change and new adventures.", w: "You might make impulsive choices on a whim. Try to pause and think of the consequences before jumping in." },
+    4: { l: "You are extremely driven, intense, and hate feeling tied down.", w: "This can lead to restlessness or taking unnecessary risks. Channel your energy into structured, high-energy challenges." }
+  },
+  6: {
+    1: { l: "You appreciate beauty, art, and harmony. You love taking care of your home and keeping your family happy.", w: "" },
+    2: { l: "You have a deep sense of responsibility toward family and close friends. You express creativity through your surroundings.", w: "You might worry about your loved ones more than necessary." },
+    3: { l: "You are a natural caretaker, putting others first and building a warm, loving home environment.", w: "Your worry for others can turn into anxiety. Avoid smothering the people you care about." },
+    4: { l: "You take on massive emotional responsibility for everyone around you, striving for domestic perfection.", w: "You can feel overwhelmed by the demands of others. Art, music, or design is your best emotional release." }
+  },
+  7: {
+    1: { l: "You are independent, reflective, and analytical. You prefer to learn from your own experiences.", w: "" },
+    2: { l: "You have deep insight and search for hidden truths. You learn valuable life lessons from your challenges.", w: "" },
+    3: { l: "You experience deep personal growth and spiritual wisdom by overcoming setbacks and disappointments.", w: "These lessons can sometimes make you feel cynical or untrusting. Look at setbacks as teachers, not punishments." },
+    4: { l: "You are highly spiritual and detached from material desires, spending much time in quiet contemplation.", w: "You may pull away from people entirely. Keep a small group of trusted friends to stay connected with the world." }
+  },
+  8: {
+    1: { l: "You are patient, disciplined, and strong. You can handle pressure and carry responsibilities for a long time.", w: "" },
+    2: { l: "You are detail-oriented, trustworthy, and highly reliable. Success and authority come to you through steady work.", w: "" },
+    3: { l: "You are a perfectionist who takes work very seriously. You hold yourself to extremely high standards.", w: "Success may feel like a slow, uphill climb. Avoid workaholism and learn to celebrate small victories." },
+    4: { l: "You carry a massive amount of responsibility and work, rarely asking others for help.", w: "You run the risk of physical and mental exhaustion. Learning to delegate and trust others is necessary for survival." }
+  },
+  9: {
+    1: { l: "You are ambitious, energetic, and value respect. You want to succeed and be appreciated by others.", w: "" },
+    2: { l: "You are highly intelligent, quick-witted, and active. You are determined to stand up for what you believe in.", w: "" },
+    3: { l: "You have intense drive and energy. You are highly expressive and passionate about your beliefs.", w: "You can be impatient, hot-tempered, and argumentative. Channel your fire into active sports or work." },
+    4: { l: "You have an explosive amount of energy and determination to achieve your goals.", w: "If you don't keep active, this energy can turn inward as frustration or anger. Regular physical movement is vital." }
+  }
+};
+
+const GROWTH = {
+  1: "Expressing your feelings: Start sharing your thoughts and emotions directly instead of keeping them inside.",
+  2: "Developing intuition: Practice quiet listening, spend time in nature, and learn to trust your first instinct.",
+  3: "Expanding knowledge: Read new books, take classes, and share what you learn with others to boost creative growth.",
+  4: "Building routines: Establish simple, daily habits and organize your physical space to increase your practical focus.",
+  5: "Finding balance: Practice breathing exercises, try new activities, and step out of your comfort zone to find stability.",
+  6: "Creating harmony: Surround yourself with beautiful things, practice self-care, and bring balance to your close relationships.",
+  7: "Self-reflection: Spend structured time alone without your phone, write in a journal, and look for lessons in life events.",
+  8: "Steady completion: Practice finishing projects you start before jumping to new ones to build long-term focus.",
+  9: "Finding a purpose: Direct your energy toward a cause you care about and keep active through regular exercise."
+};
+
+/* ---- Planes: complete / forming / absent readings ---- */
+const PLANES = [
+  {
+    name: "Mind plane", nums: [4, 9, 2], cells: [0, 1, 2],
+    full: "You have an excellent memory, logical mind, and sharp intelligence. Thinking is your greatest strength.",
+    absent: "You rely on your gut feelings and hands-on experiences rather than abstract logic. You process ideas by doing.",
+    why: "Combines Wood 4 (order/discipline), Fire 9 (intellect), and Earth 2 (intuition) along the top row of the grid, representing a complete channel for intellectual and thinking power."
+  },
+  {
+    name: "Emotion plane", nums: [3, 5, 7], cells: [3, 4, 5],
+    full: "You are emotionally balanced, deeply intuitive, and empathetic. You understand the feelings of others easily.",
+    absent: "You process emotions logically or through action. You may take time to recognize and talk about how you feel.",
+    why: "Combines Wood 3 (family growth), Earth 5 (center balance), and Metal 7 (reflection) across the middle row, representing the heart, empathy, and intuitive balance."
+  },
+  {
+    name: "Practical plane", nums: [8, 1, 6], cells: [6, 7, 8],
+    full: "You are highly practical, realistic, and excellent at turning concepts into physical reality.",
+    absent: "You are a dreamer whose ideas often move faster than your actions. You need partners or structured systems to finish your work.",
+    why: "Combines Earth 8 (knowledge), Water 1 (career), and Metal 6 (support) across the bottom row, representing grounding, execution, and material success."
+  },
+  {
+    name: "Thought column", nums: [4, 3, 8], cells: [0, 3, 6],
+    full: "You are a natural planner. You plan your steps carefully, organize details, and look ahead before acting.",
+    absent: "You prefer to act on immediate inspiration rather than a strict plan. Writing down your goals will keep you on track.",
+    why: "Combines Wood 4 (discipline), Wood 3 (growth), and Earth 8 (knowledge) along the left column, representing planning and determination."
+  },
+  {
+    name: "Will column", nums: [9, 5, 1], cells: [1, 4, 7],
+    full: "You have immense willpower and determination. Once you make a choice, you persist until it is done.",
+    absent: "Your drive comes in waves. You need external schedules and routines to help you stay motivated.",
+    why: "Combines Fire 9 (ambition), Earth 5 (center anchor), and Water 1 (career flow) in the center column, forming the backbone of drive and persistence."
+  },
+  {
+    name: "Action column", nums: [2, 7, 6], cells: [2, 5, 8],
+    full: "You are a doer. You prefer taking immediate action and executing plans rather than overthinking them.",
+    absent: "You think deeply and analyze carefully before starting. You are slower to begin but very steady once you do.",
+    why: "Combines Earth 2 (relationships), Metal 7 (reflection), and Metal 6 (helpers) along the right column, representing active execution and movement."
+  },
+  {
+    name: "Golden diagonal", nums: [4, 5, 6], cells: [0, 4, 8],
+    full: "You experience steady success, material luck, and recognition that naturally increases as you grow older.",
+    absent: "You may experience sudden changes or obstacles that require you to learn resilience and self-reliance rather than relying on luck.",
+    why: "Connects Wood 4 (wealth), Earth 5 (center balance), and Metal 6 (helper support), forming a diagonal channel of material opportunities and success."
+  },
+  {
+    name: "Silver diagonal", nums: [2, 5, 8], cells: [2, 4, 6],
+    full: "You are grounded, determined, and practical. You have excellent focus and are likely to succeed with land or property.",
+    absent: "You might experience moments of hesitation or self-doubt. Grounding yourself and building trust in your path will help you move forward.",
+    why: "Connects Earth 2 (relationships), Earth 5 (center anchor), and Earth 8 (wisdom), combining three Earth coordinates for strong stability."
+  }
+];
+
+const MAITRI = {
+  1: { f: [1, 2, 3, 5, 6, 9], e: [8] },
+  2: { f: [1, 3, 5], e: [4, 8, 9] },
+  3: { f: [1, 2, 3, 5], e: [6] },
+  4: { f: [1, 5, 6, 7], e: [2, 4, 8, 9] },
+  5: { f: [1, 2, 3, 5, 6], e: [] },
+  6: { f: [1, 4, 5, 6, 7], e: [3] },
+  7: { f: [1, 4, 5, 6], e: [] },
+  8: { f: [3, 5, 6, 7], e: [1, 2, 4, 8] },
+  9: { f: [1, 3, 5], e: [2, 4] }
+};
+
+const maitri = (a, b) => MAITRI[a].f.includes(b) ? 'friend' : MAITRI[a].e.includes(b) ? 'enemy' : 'neutral';
+const COUNTWORD = ["", "present", "strong", "pronounced", "intense"];
+
+/* ---------- State Management ---------- */
+let selMonth = null, selSex = null, lastResult = null;
+
+/* ---------- Month & Sex Chip Selectors ---------- */
+const mwrap = document.getElementById('months');
+MONTHS.forEach((m, i) => {
+  const b = document.createElement('button');
+  b.textContent = m; b.type = 'button';
+  b.onclick = () => {
+    selMonth = i + 1;
+    [...mwrap.children].forEach(c => c.classList.remove('on'));
+    b.classList.add('on');
+    autoRecalculate();
+  };
+  mwrap.appendChild(b);
+});
+
+const swrap = document.getElementById('sex');
+[...swrap.children].forEach(b => {
+  b.onclick = () => {
+    selSex = b.dataset.s;
+    [...swrap.children].forEach(c => c.classList.remove('on'));
+    b.classList.add('on');
+    autoRecalculate();
+  };
+});
+
+// Setup triggers for checkboxes
+['inc-driver', 'inc-conductor', 'inc-kua'].forEach(id => {
+  document.getElementById(id).addEventListener('change', autoRecalculate);
+});
+
+// Setup triggers for numeric inputs
+['dd', 'yyyy'].forEach(id => {
+  document.getElementById(id).addEventListener('input', autoRecalculate);
+});
+
+/* ---------- Core Functions ---------- */
+const reduce1 = n => {
+  while (n > 9) { n = String(n).split('').reduce((a, d) => a + +d, 0) }
+  return n;
+};
+const digitsOf = n => String(n).split('').map(Number).filter(d => d > 0);
+function daysIn(m, y) {
+  return [31, (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1];
+}
+function kuaOf(y, sex) {
+  const y2 = reduce1(+String(y).slice(-2) || 9);
+  let k = sex === 'M' ? (y < 2000 ? 10 - y2 : 11 - y2) : (y < 2000 ? y2 + 5 : y2 + 6);
+  k = reduce1(k <= 0 ? k + 9 : k);
+  if (k === 5) k = sex === 'M' ? 2 : 8; // Kua 5 does not exist in Eight Mansions
+  return k;
+}
+const KUA_GROUP = k => [1, 3, 4, 9].includes(k) ? 'East group · E, SE, S, N favorable' : 'West group · W, NW, SW, NE favorable';
+const tier = c => Math.min(c, 4);
+
+function autoRecalculate() {
+  const dd = +document.getElementById('dd').value;
+  const yyyy = +document.getElementById('yyyy').value;
+  // If we have valid basic data, calculate automatically
+  if (dd >= 1 && dd <= 31 && yyyy >= 1000 && yyyy <= 2100 && selMonth && selSex) {
+    if (dd <= daysIn(selMonth, yyyy)) {
+      cast();
+    }
+  }
+}
+
+function cast() {
+  const err = document.getElementById('err');
+  const dd = +document.getElementById('dd').value;
+  const yyyy = +document.getElementById('yyyy').value;
+  err.textContent = '';
+  
+  if (!dd || !selMonth || !yyyy) { err.textContent = 'Day, month and year are all needed.'; return; }
+  if (!selSex) { err.textContent = 'Kua needs male/female basis — pick one.'; return; }
+  if (yyyy < 1000 || yyyy > 2100) { err.textContent = 'Year should be four digits.'; return; }
+  if (dd < 1 || dd > daysIn(selMonth, yyyy)) { err.textContent = MONTHS[selMonth - 1] + ' ' + yyyy + ' has no day ' + dd + '.'; return; }
+
+  const driver = reduce1(dd);
+  const conductor = reduce1([...String(dd), ...String(selMonth), ...String(yyyy)].reduce((a, d) => a + +d, 0));
+  const kua = kuaOf(yyyy, selSex);
+  
+  // Calculate pool based on toggles
+  const pool = [...digitsOf(dd), ...digitsOf(selMonth), ...digitsOf(yyyy)];
+  if (document.getElementById('inc-driver').checked) pool.push(driver);
+  if (document.getElementById('inc-conductor').checked) pool.push(conductor);
+  if (document.getElementById('inc-kua').checked) pool.push(kua);
+  
+  const counts = {}; for (let i = 1; i <= 9; i++) counts[i] = 0;
+  pool.forEach(d => counts[d]++);
+  
+  const complete = PLANES.filter(p => p.nums.every(n => counts[n] > 0));
+  const forming = PLANES.filter(p => !complete.includes(p) && p.nums.filter(n => counts[n] > 0).length === 2);
+  const voidPlanes = PLANES.filter(p => p.absent && p.nums.every(n => counts[n] === 0));
+
+  lastResult = { dd, mm: selMonth, yyyy, sex: selSex, driver, conductor, kua, counts, complete, forming, voidPlanes };
+  
+  renderGrid(lastResult);
+  renderReading(lastResult);
+  document.getElementById('tab-read').disabled = false;
+}
+
+/* ---------- Grid Render ---------- */
+function renderGrid(r) {
+  const g = document.getElementById('loshu');
+  document.getElementById('empty').classList.add('hide');
+  g.querySelectorAll('.cell').forEach(c => c.remove());
+  const svg = document.getElementById('strokes'); svg.innerHTML = '';
+  document.getElementById('date-echo').textContent =
+    String(r.dd).padStart(2, '0') + ' ' + MONTHS[r.mm - 1] + ' ' + r.yyyy;
+
+  SQUARE.forEach((n, i) => {
+    const c = r.counts[n];
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (c === 0 ? ' absent' : '');
+    cell.setAttribute('data-num', n);
+    cell.style.animationDelay = (i * 70) + 'ms';
+    
+    let dots = '';
+    if (c > 0) {
+      const shown = Math.min(c, 6);
+      dots = '<div class="dots d' + shown + '">' + Array.from({ length: shown }, (_, k) =>
+        '<span class="dot pop" style="animation-delay:' + (i * 70 + 260 + k * 90) + 'ms"></span>').join('') + '</div>';
+    }
+    
+    // Create tooltip content
+    const info = WHY[n];
+    const tooltipHtml = `
+      <div class="cell-tooltip">
+        <strong>Cell ${n}: ${info.area}</strong>
+        <p><b>Element:</b> ${info.element}</p>
+        <p><b>Direction:</b> ${info.direction}</p>
+        <p><b>Planet:</b> ${info.planet}</p>
+        <hr>
+        <p><b>Why:</b> ${info.reason}</p>
+      </div>
+    `;
+    
+    cell.innerHTML = (c > 1 ? '<span class="count-tag' + (c >= 4 ? ' hot' : '') + '">×' + c + '</span>' : '') +
+      '<span class="num">' + n + '</span>' + dots + tooltipHtml;
+    
+    g.appendChild(cell);
+    requestAnimationFrame(() => cell.classList.add('in'));
+  });
+
+  // Draw complete plane lines
+  const P = [50, 150, 250], cx = i => P[i % 3], cy = i => P[(i / 3) | 0];
+  r.complete.forEach((pl, k) => {
+    const a = pl.cells[0], b = pl.cells[2];
+    const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    ln.setAttribute('x1', cx(a)); ln.setAttribute('y1', cy(a));
+    ln.setAttribute('x2', cx(b)); ln.setAttribute('y2', cy(b));
+    ln.style.animationDelay = (1050 + k * 350) + 'ms';
+    ln.classList.add('draw');
+    svg.appendChild(ln);
+  });
+  
+  const legend = document.getElementById('plane-legend');
+  legend.innerHTML = r.complete.length
+    ? 'Completed: ' + r.complete.map(p => '<b>' + p.name + '</b> (' + p.nums.join('·') + ')').join(' — ')
+    : (r.forming.length ? 'Forming: ' + r.forming.map(p => p.name).join(', ') + ' — one number from complete.' : '');
+  setTimeout(() => legend.classList.add('show'), 900);
+
+  const seals = document.getElementById('seals');
+  seals.classList.add('show');
+  
+  const sd = document.getElementById('seal-driver'), sc = document.getElementById('seal-cond'), sk = document.getElementById('seal-kua');
+  [sd, sc, sk].forEach(s => s.classList.remove('stamped')); void sd.offsetWidth;
+  
+  document.getElementById('driver-n').textContent = r.driver;
+  document.getElementById('driver-p').textContent = PLANETS[r.driver].split(' (')[0];
+  document.getElementById('cond-n').textContent = r.conductor;
+  document.getElementById('cond-p').textContent = PLANETS[r.conductor].split(' (')[0];
+  document.getElementById('kua-n').textContent = r.kua;
+  document.getElementById('kua-p').textContent = KUA_GROUP(r.kua).split(' · ')[0];
+  
+  setTimeout(() => sd.classList.add('stamped'), 650);
+  setTimeout(() => sc.classList.add('stamped'), 880);
+  setTimeout(() => sk.classList.add('stamped'), 1110);
+  
+  // Render element balance bars
+  renderElementBalance(r);
+}
+
+/* ---------- Element Balance Render ---------- */
+function renderElementBalance(r) {
+  const eb = document.getElementById('element-balance');
+  eb.style.display = 'block';
+  const container = eb.querySelector('.element-bars');
+  container.innerHTML = '';
+  
+  const elements = [
+    { name: "Fire", color: "#AE3B26", icon: "🔥", count: r.counts[9], why: "South direction. Governs fame, public image, enthusiasm, and warmth." },
+    { name: "Earth", color: "#D6A257", icon: "⛰️", count: r.counts[2] + r.counts[5] + r.counts[8], why: "Center, SW, NE directions. Governs stability, relationships, wisdom, and grounding." },
+    { name: "Metal", color: "#8F9499", icon: "⚔️", count: r.counts[6] + r.counts[7], why: "West & NW directions. Governs creativity, helpful mentors, and clear structure." },
+    { name: "Water", color: "#2B4C7E", icon: "💧", count: r.counts[1], why: "North direction. Governs career, opportunities, flow, and communication." },
+    { name: "Wood", color: "#4A7C59", icon: "🌱", count: r.counts[3] + r.counts[4], why: "East & SE directions. Governs growth, health, wealth accumulation, and discipline." }
+  ];
+  
+  elements.forEach(el => {
+    // scale against a baseline max count of 5 for visually appealing progress bars
+    const pct = (el.count / 5) * 100;
+    const barHtml = `
+      <div class="el-bar-row">
+        <div class="el-bar-label">
+          <span>${el.icon} ${el.name}</span>
+          <span class="el-bar-count">${el.count}</span>
+        </div>
+        <div class="el-bar-track">
+          <div class="el-bar-fill" style="width: ${Math.min(pct, 100)}%; background-color: ${el.color};"></div>
+        </div>
+        <span class="why-badge inline">?
+          <span class="why-tooltip"><strong>${el.name} Element:</strong><br>${el.why}</span>
+        </span>
+      </div>
+    `;
+    container.innerHTML += barHtml;
+  });
+}
+
+/* ---------- Reading Render ---------- */
+function entry(lead, sub, body, mech, cls, watch, whyText, highlightNums) {
+  let whyHtml = '';
+  if (whyText) {
+    whyHtml = `<span class="why-badge">?
+      <span class="why-tooltip"><strong>The Metaphysical "Why":</strong><br>${whyText}</span>
+    </span>`;
+  }
+  const hoverAttr = highlightNums ? `data-hover-nums="${highlightNums.join(',')}"` : '';
+  return `<div class="entry ${cls || ''}" ${hoverAttr}>
+    <div class="lead">${lead}${whyHtml}<small>${sub}</small></div>
+    <p>${body}
+      ${watch ? `<span class="watch">${watch}</span>` : ''}
+      ${mech ? `<span class="mech">${mech}</span>` : ''}
+    </p>
+  </div>`;
+}
+
+function renderReading(r) {
+  document.getElementById('reading-date').textContent =
+    String(r.dd).padStart(2, '0') + ' ' + MONTHS[r.mm - 1] + ' ' + r.yyyy + ' · ' +
+    Object.entries(r.counts).filter(([, c]) => c > 0).map(([n, c]) => n + (c > 1 ? '×' + c : '')).join(' ');
+
+  /* 1. Seals + Friendship (Maitri) */
+  const rel = maitri(r.driver, r.conductor);
+  const relText = {
+    friend: 'Your Driver and Conductor numbers are friends. Your daily habits and overall life direction work together naturally, helping you move forward smoothly.',
+    neutral: 'Your Driver and Conductor are neutral. Your daily style and overall path are workable, but you will need to consciously practice alignment.',
+    enemy: 'Your Driver and Conductor are conflicting numbers. Your day-to-day actions and long-term destiny can feel like they pull in opposite directions. If managed well, this creates a powerful drive; if unmanaged, it creates inner stress.'
+  }[rel];
+  
+  document.getElementById('seal-entries').innerHTML =
+    entry(r.driver, 'Driver',
+      'This represents your default behavior — the basic personality traits and tools you reach for first. ' + REPEAT[r.driver][1].l,
+      'Calculated from birth day ' + r.dd + ' → ' + r.driver + ' · ' + PLANETS[r.driver],
+      '', null,
+      'Calculated from the day of your birth. The day you enter the world represents your core identity and everyday habits.',
+      [r.driver]
+    ) +
+    entry(r.conductor, 'Conductor',
+      'This represents your long-term life path and destination — the main lesson and theme of your journey. ' + REPEAT[r.conductor][1].l,
+      'Calculated from full date sum → ' + r.conductor + ' · ' + PLANETS[r.conductor],
+      '', null,
+      'Calculated by summing all digits of your date of birth. It represents your destiny, major themes, and the ultimate path of your life.',
+      [r.conductor]
+    ) +
+    entry(r.kua, 'Kua',
+      'Your personal energy and compass number from Feng Shui. This indicates your favorable directions. ' + KUA_GROUP(r.kua) + '.',
+      'Calculated from year ' + r.yyyy + ' (' + (r.sex === 'M' ? 'male' : 'female') + ' rule) → ' + r.kua,
+      '', null,
+      'Derived from your birth year and gender. It connects you to Earth\'s magnetic fields to determine favorable compass directions for work and sleep.',
+      [r.kua]
+    ) +
+    entry(r.driver + '·' + r.conductor, 'Maitri',
+      relText,
+      'Friendship chart relationship: ' + r.driver + ' ↔ ' + r.conductor + ' = ' + rel,
+      '', null,
+      'Compares the compatibility of your Driver (daily habits) and Conductor (destiny). Friendly numbers speed up success, while conflicting numbers push you to grow.',
+      [r.driver, r.conductor]
+    );
+
+  /* 2. Numbers Present */
+  const present = Object.entries(r.counts).filter(([, c]) => c > 0);
+  document.getElementById('present-entries').innerHTML = present.map(([n, c]) => {
+    const t = REPEAT[n][tier(c)];
+    const cellInfo = WHY[n];
+    const whyDesc = `${cellInfo.element} element (${cellInfo.direction} direction). Governs ${cellInfo.area}. ${cellInfo.reason}`;
+    return entry(n + (c > 1 ? ' <span style="font-size:15px;color:var(--cinnabar)">×' + c + '</span>' : ''),
+      COUNTWORD[tier(c)], t.l,
+      PLANETS[n] + ' · appears ' + c + (c > 1 ? ' times' : ' time') + ' in your grid',
+      '', t.w,
+      whyDesc,
+      [Number(n)]
+    );
+  }).join('');
+
+  /* 3. Planes (Yogs) */
+  let planeHtml = r.complete.map(p =>
+    entry(p.nums.join('·'), p.name, p.full, '', 'plane', null, p.why, p.nums)
+  ).join('');
+  
+  planeHtml += r.forming.map(p => {
+    const missingNum = p.nums.find(n => r.counts[n] === 0);
+    return entry(p.nums.join('·'), p.name + ' <span class="badge">forming</span>',
+      `Two out of three numbers are present. This plane will complete as you develop the missing number ${missingNum} channel (see instructions below).`,
+      '', 'plane', null, p.why, p.nums);
+  }).join('');
+  
+  planeHtml += r.voidPlanes.map(p =>
+    entry(p.nums.join('·'), p.name + ' <span class="badge">open</span>', p.absent, '', 'voidp', null, p.why, p.nums)
+  ).join('');
+  
+  document.getElementById('plane-entries').innerHTML = planeHtml ||
+    '<div class="entry"><div class="lead">–</div><p>No full planes formed yet. Your strength lies in individual numbers rather than combined lines, suggesting specialized focus over broad activity.</p></div>';
+
+  /* 4. Open Channels (Growth) */
+  const missing = Object.entries(r.counts).filter(([, c]) => c === 0);
+  document.getElementById('growth-entries').innerHTML = missing.length ? missing.map(([n]) => {
+    const cellInfo = WHY[n];
+    const whyDesc = `${cellInfo.element} element (${cellInfo.direction} direction). Developing this represents building strength in ${cellInfo.area}.`;
+    return entry(n, 'open', GROWTH[n], PLANETS[n] + ' · an opportunity for personal growth', 'growth', null, whyDesc, [Number(n)]);
+  }).join('') : '<div class="entry"><div class="lead">✓</div><p>All nine seats are held — a rare, completely full square representing balanced options.</p></div>';
+
+  /* 5. Synthesis */
+  const maxN = present.reduce((a, b) => +b[1] > +a[1] ? b : a);
+  let s = 'Your Driver ' + r.driver + ' (' + PLANETS[r.driver].split(' (')[0] + ') rules your daily actions, while Conductor ' +
+    r.conductor + ' (' + PLANETS[r.conductor].split(' (')[0] + ') shows your life destination. They are ' + rel + 's. ';
+  s += 'The number ' + maxN[0] + ' is the most common digit in your chart, appearing ' + maxN[1] + ' times. This is your strongest energetic influence';
+  s += (+maxN[1] >= 4 ? ', and you must watch for its over-expressions.' : '. ');
+  s += r.complete.length
+    ? 'The complete ' + r.complete.map(p => p.name).join(' and ') + ' planes give this energy a clear path to run on.'
+    : (r.forming.length
+        ? 'The ' + r.forming[0].name + ' plane is only one number away from forming — this represents your easiest opportunity for personal balance.'
+        : 'Your chart focuses energy in specific areas rather than drawing lines, highlighting deep, specialized strengths.');
+  document.getElementById('synth').textContent = s;
+
+  // Add the hover highlighting connections
+  setupHoverEffects();
+}
+
+function setupHoverEffects() {
+  const entries = document.querySelectorAll('.entry[data-hover-nums]');
+  entries.forEach(entry => {
+    const numStr = entry.getAttribute('data-hover-nums');
+    if (!numStr) return;
+    const nums = numStr.split(',').map(Number);
+    
+    entry.addEventListener('mouseenter', () => {
+      nums.forEach(n => {
+        const cell = document.querySelector(`.cell[data-num="${n}"]`);
+        if (cell) cell.classList.add('highlight');
+      });
+      
+      // Highlight SVG lines for complete plane matches
+      if (entry.classList.contains('plane')) {
+        const index = lastResult.complete.findIndex(p => p.nums.every(num => nums.includes(num)));
+        if (index !== -1) {
+          const line = document.querySelectorAll('.strokes line')[index];
+          if (line) line.classList.add('highlight');
+        }
+      }
+    });
+    
+    entry.addEventListener('mouseleave', () => {
+      nums.forEach(n => {
+        const cell = document.querySelector(`.cell[data-num="${n}"]`);
+        if (cell) cell.classList.remove('highlight');
+      });
+      document.querySelectorAll('.strokes line').forEach(line => line.classList.remove('highlight'));
+    });
+  });
+}
+
+/* ---------- View Switcher ---------- */
+function showView(v) {
+  const iv = document.getElementById('input-view');
+  const rv = document.getElementById('reading-view');
+  const tg = document.getElementById('tab-grid');
+  const tr = document.getElementById('tab-read');
+  
+  if (v === 'reading' && tr.disabled) return;
+  
+  if (v === 'grid') {
+    iv.style.display = 'block';
+    rv.style.display = 'none';
+    tg.setAttribute('aria-selected', 'true');
+    tr.setAttribute('aria-selected', 'false');
+  } else {
+    iv.style.display = 'none';
+    rv.style.display = 'block';
+    tg.setAttribute('aria-selected', 'false');
+    tr.setAttribute('aria-selected', 'true');
+    
+    // Trigger transition animations for list entries
+    document.querySelectorAll('.rsec').forEach((s, i) => {
+      s.classList.remove('rin');
+      void s.offsetWidth;
+      s.style.animationDelay = (i * 120) + 'ms';
+      s.classList.add('rin');
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+/* ---------- Interactive Helpers ---------- */
+function loadDemo() {
+  document.getElementById('dd').value = '29';
+  document.getElementById('yyyy').value = '1988';
+  
+  // Select NOV
+  selMonth = 11;
+  [...mwrap.children].forEach((c, idx) => {
+    if (idx === 10) c.classList.add('on');
+    else c.classList.remove('on');
+  });
+  
+  // Select MALE
+  selSex = 'M';
+  [...swrap.children].forEach(c => {
+    if (c.dataset.s === 'M') c.classList.add('on');
+    else c.classList.remove('on');
+  });
+  
+  cast();
+}
+
+function resetForm() {
+  document.getElementById('dd').value = '';
+  document.getElementById('yyyy').value = '';
+  selMonth = null;
+  selSex = null;
+  lastResult = null;
+  
+  // Reset chips
+  [...mwrap.children].forEach(c => c.classList.remove('on'));
+  [...swrap.children].forEach(c => c.classList.remove('on'));
+  
+  // Reset seals
+  const sd = document.getElementById('seal-driver'), sc = document.getElementById('seal-cond'), sk = document.getElementById('seal-kua');
+  [sd, sc, sk].forEach(s => s.classList.remove('stamped'));
+  document.getElementById('driver-n').textContent = '–';
+  document.getElementById('driver-p').textContent = '';
+  document.getElementById('cond-n').textContent = '–';
+  document.getElementById('cond-p').textContent = '';
+  document.getElementById('kua-n').textContent = '–';
+  document.getElementById('kua-p').textContent = '';
+  document.getElementById('seals').classList.remove('show');
+  
+  // Reset grid
+  const g = document.getElementById('loshu');
+  g.querySelectorAll('.cell').forEach(c => c.remove());
+  document.getElementById('empty').classList.remove('hide');
+  document.getElementById('date-echo').textContent = '';
+  const svg = document.getElementById('strokes'); svg.innerHTML = '';
+  
+  const legend = document.getElementById('plane-legend');
+  legend.innerHTML = '';
+  legend.classList.remove('show');
+  
+  // Reset element bars
+  document.getElementById('element-balance').style.display = 'none';
+  
+  // Reset reading tab
+  document.getElementById('tab-read').disabled = true;
+  showView('grid');
+}
+
+function copyReading() {
+  if (!lastResult) return;
+  const r = lastResult;
+  const rel = maitri(r.driver, r.conductor);
+  
+  let text = `LO SHU GRID NUMEROLOGY REPORT\n`;
+  text += `Date of Birth: ${String(r.dd).padStart(2, '0')} ${MONTHS[r.mm - 1]} ${r.yyyy} (${r.sex === 'M' ? 'Male' : 'Female'})\n\n`;
+  text += `Driver (Mulank): ${r.driver} (Planet: ${PLANETS[r.driver]})\n`;
+  text += `Conductor (Bhagyank): ${r.conductor} (Planet: ${PLANETS[r.conductor]})\n`;
+  text += `Kua Number: ${r.kua} (${KUA_GROUP(r.kua).split(' · ')[0]})\n`;
+  text += `Maitri: ${r.driver} ↔ ${r.conductor} (${rel.toUpperCase()})\n\n`;
+  text += `SYNTHESIS:\n${document.getElementById('synth').textContent}\n\n`;
+  
+  text += `PRESENCE ANALYSIS:\n`;
+  Object.entries(r.counts).filter(([, c]) => c > 0).forEach(([n, c]) => {
+    const t = REPEAT[n][tier(c)];
+    text += `- Number ${n} (${COUNTWORD[tier(c)].toUpperCase()}): ${t.l}\n`;
+    if (t.w) text += `  Watch: ${t.w}\n`;
+  });
+  
+  text += `\nPLANES & YOGS:\n`;
+  r.complete.forEach(p => { text += `- ${p.name} (COMPLETE): ${p.full}\n`; });
+  r.forming.forEach(p => { text += `- ${p.name} (FORMING): Two of three digits present. Developing the missing slot helps close this circuit.\n`; });
+  r.voidPlanes.forEach(p => { text += `- ${p.name} (OPEN/VOID): ${p.absent}\n`; });
+  
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const oldText = btn.textContent;
+    btn.textContent = 'COPIED!';
+    btn.style.borderColor = 'green';
+    btn.style.color = 'green';
+    setTimeout(() => {
+      btn.textContent = oldText;
+      btn.style.borderColor = 'var(--cinnabar)';
+      btn.style.color = 'var(--cinnabar)';
+    }, 1500);
+  });
+}
+</script>
+</body>
+</html>
