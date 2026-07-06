@@ -53,8 +53,8 @@ Since the application is fully client-side and self-contained, no complex server
    cd loshu
    ```
 2. **Open the application**:
-   * On macOS: `open loshu.html`
-   * On Windows: Double-click `loshu.html` or open it directly in Google Chrome, Safari, Firefox, or Edge.
+   * On macOS: `open index.html`
+   * On Windows: Double-click `index.html` or open it directly in Google Chrome, Safari, Firefox, or Edge.
 3. **Run a demo**: Click the **Demo** button to pre-fill the form with a demo date (`29 November 1988`) and see the grid and readings render instantly.
 
 ---
