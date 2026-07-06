@@ -3,7 +3,7 @@
 > An interactive, premium client-side Web application to cast, analyze, and understand the ancient Lo Shu Magic Square through modern design and detailed metaphysical interpretation.
 
 <p align="center">
-  <img src="demo.webp" alt="Lo Shu Grid Interactive Demo" width="720" style="border: 1.5px solid #211D17; border-radius: 4px; box-shadow: 0 10px 30px rgba(33,29,23,0.12);" />
+  <img src="demo.png" alt="Lo Shu Grid Interactive Screenshot" width="720" style="border: 1.5px solid #211D17; border-radius: 4px; box-shadow: 0 10px 30px rgba(33,29,23,0.12);" />
 </p>
 
 ---
