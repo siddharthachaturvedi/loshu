@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Lo Shu · Interactive Magic Square</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -473,7 +473,145 @@ footer {
   .entry { grid-template-columns: 80px 1fr; gap: 12px; }
   .entry .lead { font-size: 21px; }
   .months { grid-template-columns: repeat(4, 1fr); }
+  .reading-head { flex-direction: column; align-items: flex-start; }
+  .reading-head > div { width: 100%; justify-content: space-between; }
+  .synth { padding-left: 16px; font-size: 17px; }
+  .seal { min-width: 80px; padding: 12px 10px 9px; }
+  .seal .n { font-size: 28px; }
+  .el-bar-row { grid-template-columns: 72px 1fr 24px; }
 }
+
+/* ============ PHONE-SPECIFIC (≤480px) ============ */
+@media(max-width: 480px) {
+  .frame { padding: 0 16px 64px; }
+  header { flex-direction: column; align-items: flex-start; gap: 12px; padding: 20px 0 18px; }
+  .masthead-left { gap: 14px; }
+  .masthead-note { max-width: 100%; font-size: 11px; }
+  .switch { width: 100%; }
+  .switch button { flex: 1; padding: 12px 10px; min-height: 44px; font-size: 11px; }
+  .months { grid-template-columns: repeat(3, 1fr); }
+  .months button { padding: 12px 0; min-height: 44px; }
+  #sex button { min-height: 44px; padding: 12px 0; }
+  .field input { font-size: 28px; }
+  .cast { min-height: 48px; font-size: 12px; }
+  .entry { grid-template-columns: 60px 1fr; gap: 10px; padding: 14px 0; }
+  .entry .lead { font-size: 19px; }
+  .entry p { font-size: 13.5px; }
+  .gridwrap { max-width: 100%; }
+  .cell .num { font-size: clamp(28px, 8vw, 42px); }
+  .cell .count-tag { font-size: 10px; top: 4px; right: 6px; }
+  .dots .dot { width: 6px; height: 6px; }
+  .seal { min-width: 70px; flex: 1 1 70px; }
+  .seal .n { font-size: 24px; }
+  .seal .k { font-size: 8.5px; }
+  .seal .p { font-size: 9px; }
+  .reading-head h2 { font-size: 26px; }
+  .synth { font-size: 16px; padding-left: 14px; margin: 14px 0 32px; }
+  .el-bar-row { grid-template-columns: 60px 1fr 22px; gap: 6px; }
+  .el-bar-label { font-size: 10px; }
+  .legend-box p { font-size: 11.5px !important; }
+  footer { font-size: 9.5px; flex-direction: column; }
+}
+
+/* ============ TOUCH DEVICE SUPPORT ============ */
+@media (hover: none) and (pointer: coarse) {
+  /* Prevent iOS zoom on input focus */
+  .field input { font-size: 16px; }
+  /* Enlarge touch targets */
+  .months button, #sex button, .cast, .switch button { min-height: 44px; }
+  /* Disable hover tooltips — use tap instead */
+  .cell:hover .cell-tooltip { visibility: hidden; opacity: 0; }
+  .why-badge:hover .why-tooltip { visibility: hidden; opacity: 0; }
+  .cell .cell-tooltip.touch-show,
+  .why-badge .why-tooltip.touch-show {
+    visibility: visible !important; opacity: 1 !important;
+    transform: translateX(-50%) translateY(0) !important;
+  }
+  /* Mobile tooltip clamping */
+  .cell-tooltip, .why-tooltip {
+    width: min(280px, 85vw);
+    max-width: 85vw;
+  }
+  /* Left-edge cells: shift tooltip right */
+  .cell:nth-child(3n+1) .cell-tooltip { left: 0; transform: translateX(0) translateY(-8px); }
+  .cell:nth-child(3n+1) .cell-tooltip.touch-show { transform: translateX(0) translateY(0) !important; }
+  /* Right-edge cells: shift tooltip left */
+  .cell:nth-child(3n) .cell-tooltip { left: auto; right: 0; transform: translateX(0) translateY(-8px); }
+  .cell:nth-child(3n) .cell-tooltip.touch-show { transform: translateX(0) translateY(0) !important; }
+  .entry:hover { background-color: transparent; padding-left: 0; }
+  touch-action: manipulation;
+}
+
+/* ============ YOGA SECTION STYLES ============ */
+.yoga-card {
+  padding: 18px; margin-bottom: 14px;
+  border: 1px solid var(--hair);
+  border-left: 4px solid var(--cinnabar);
+  background: linear-gradient(135deg, rgba(250,246,238,0.6), rgba(242,236,223,0.8));
+  transition: all 0.25s var(--ease-out);
+}
+.yoga-card:hover {
+  background: rgba(174, 59, 38, 0.04);
+  border-color: var(--cinnabar);
+}
+.yoga-card.auspicious { border-left-color: #4A7C59; }
+.yoga-card.challenging { border-left-color: #AE3B26; }
+.yoga-card.neutral-yoga { border-left-color: #D6A257; }
+
+.yoga-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.yoga-name {
+  font-family: 'Fraunces', serif; font-size: 22px; font-weight: 560; line-height: 1.1;
+}
+.yoga-name.auspicious { color: #4A7C59; }
+.yoga-name.challenging { color: var(--cinnabar); }
+.yoga-name.neutral-yoga { color: #8B7235; }
+.yoga-sanskrit {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .08em;
+  color: var(--ink-soft); padding: 2px 8px; border: 1px solid var(--hair); background: var(--paper);
+}
+.yoga-type-badge {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em;
+  text-transform: uppercase; padding: 2px 8px; border-radius: 2px;
+}
+.yoga-type-badge.auspicious { background: rgba(74,124,89,0.12); color: #4A7C59; border: 1px solid rgba(74,124,89,0.3); }
+.yoga-type-badge.challenging { background: rgba(174,59,38,0.1); color: var(--cinnabar); border: 1px solid rgba(174,59,38,0.25); }
+.yoga-type-badge.neutral-yoga { background: rgba(214,162,87,0.12); color: #8B7235; border: 1px solid rgba(214,162,87,0.3); }
+.yoga-body {
+  font-size: 14.5px; line-height: 1.6; color: var(--ink); max-width: 64ch;
+}
+.yoga-body .yoga-mech {
+  display: block; margin-top: 6px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-soft);
+}
+.yoga-body .yoga-remedy {
+  display: block; margin-top: 8px; font-size: 13.5px; color: #4A7C59;
+}
+.yoga-body .yoga-remedy::before {
+  content: "remedy"; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em;
+  text-transform: uppercase; border: 1px solid #4A7C59; padding: 1px 5px; margin-right: 8px;
+  color: #4A7C59; vertical-align: 1px;
+}
+.yoga-body .yoga-caution {
+  display: block; margin-top: 8px; font-size: 13.5px; color: var(--cinnabar-deep);
+}
+.yoga-body .yoga-caution::before {
+  content: "caution"; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .14em;
+  text-transform: uppercase; border: 1px solid var(--cinnabar); padding: 1px 5px; margin-right: 8px;
+  color: var(--cinnabar); vertical-align: 1px;
+}
+.no-yogas {
+  font-family: 'Inter', system-ui, sans-serif; font-size: 14px; color: var(--ink-soft);
+  padding: 16px 0; line-height: 1.6;
+}
+
+@media(max-width: 480px) {
+  .yoga-card { padding: 14px; }
+  .yoga-name { font-size: 18px; }
+  .yoga-body { font-size: 13.5px; }
+}
+
 @media(prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s!important; transition-duration: .001s!important; }
 }
@@ -518,6 +656,10 @@ footer {
   .entry {
     page-break-inside: avoid;
     border-bottom: 1px solid #DDD;
+  }
+  .yoga-card {
+    page-break-inside: avoid;
+    border-left-width: 3px;
   }
 }
 </style>
@@ -638,6 +780,11 @@ footer {
         <div id="seal-entries"></div>
       </div>
       
+      <div class="rsec" id="sec-yogas">
+        <h3>Yogas · special combinations</h3>
+        <div id="yoga-entries"></div>
+      </div>
+
       <div class="rsec" id="sec-present">
         <h3>Numbers present · dose makes the medicine</h3>
         <div id="present-entries"></div>
@@ -906,6 +1053,180 @@ const MAITRI = {
 const maitri = (a, b) => MAITRI[a].f.includes(b) ? 'friend' : MAITRI[a].e.includes(b) ? 'enemy' : 'neutral';
 const COUNTWORD = ["", "present", "strong", "pronounced", "intense"];
 
+/* ---- Yogas: special named combinations in Ank Jyotish ---- */
+const YOGAS = [
+  {
+    name: "Raj Yog",
+    sanskrit: "राज योग",
+    type: "auspicious",
+    detect: (r) => {
+      // Raj Yog: Driver + Conductor form a complementary pair summing to 10
+      const rajPairs = [[1,9],[2,8],[3,7],[4,6],[9,1],[8,2],[7,3],[6,4]];
+      const isPair = rajPairs.some(([a,b]) => r.driver === a && r.conductor === b);
+      // Also: 1, 5, 9 all present (Will column = royal axis)
+      const royalAxis = r.counts[1] > 0 && r.counts[5] > 0 && r.counts[9] > 0;
+      return isPair || royalAxis;
+    },
+    description: "The Yoga of Kings. This is one of the most powerful combinations in numerology, indicating natural authority, leadership, and success in positions of power. People with Raj Yog are destined for significant achievements and often rise to influential positions in their field.",
+    mechDetail: (r) => {
+      const rajPairs = [[1,9],[2,8],[3,7],[4,6],[9,1],[8,2],[7,3],[6,4]];
+      const isPair = rajPairs.some(([a,b]) => r.driver === a && r.conductor === b);
+      const royalAxis = r.counts[1] > 0 && r.counts[5] > 0 && r.counts[9] > 0;
+      let parts = [];
+      if (isPair) parts.push(`Driver ${r.driver} + Conductor ${r.conductor} = ${r.driver + r.conductor} (complementary pair)`);
+      if (royalAxis) parts.push(`1·5·9 Royal Axis (Will column) all present`);
+      return parts.join(' · ');
+    },
+    remedy: "Maximize this yoga by taking leadership roles, mentoring others, and maintaining ethical conduct. Wearing gold or yellow on Thursdays enhances Jupiter's blessing.",
+    highlightNums: (r) => {
+      let nums = [r.driver, r.conductor];
+      if (r.counts[1] > 0 && r.counts[5] > 0 && r.counts[9] > 0) nums = [...new Set([...nums, 1, 5, 9])];
+      return nums;
+    }
+  },
+  {
+    name: "Dhan Yog",
+    sanskrit: "धन योग",
+    type: "auspicious",
+    detect: (r) => {
+      // Dhan Yog: wealth combination — 4 + 6 both present (wealth + helpers)
+      // Or: Driver/Conductor in {4, 6, 8} with at least two of these strong
+      const wealthNums = [4, 6, 8];
+      const driverWealth = wealthNums.includes(r.driver);
+      const conductorWealth = wealthNums.includes(r.conductor);
+      const bothPresent = r.counts[4] > 0 && r.counts[6] > 0;
+      const strongWealth = wealthNums.filter(n => r.counts[n] >= 2).length >= 2;
+      return (bothPresent && (driverWealth || conductorWealth)) || strongWealth;
+    },
+    description: "The Wealth Yoga. This combination signals strong potential for financial accumulation and material prosperity. People with Dhan Yog have a natural talent for managing resources, building wealth systematically, and attracting financial opportunities.",
+    mechDetail: (r) => {
+      let parts = [];
+      if (r.counts[4] > 0 && r.counts[6] > 0) parts.push(`4 (wealth seat) + 6 (helper support) both active`);
+      [4, 6, 8].forEach(n => { if (r.counts[n] >= 2) parts.push(`${n} appears ×${r.counts[n]} (strong material energy)`); });
+      return parts.join(' · ');
+    },
+    remedy: "Channel this energy through structured financial planning. Donating a portion of earnings on Fridays (Venus day) strengthens this yoga. Green and white are favorable colors.",
+    highlightNums: (r) => [4, 6, 8].filter(n => r.counts[n] > 0)
+  },
+  {
+    name: "Vidya Yog",
+    sanskrit: "विद्या योग",
+    type: "auspicious",
+    detect: (r) => {
+      // Vidya Yog: knowledge — Mind plane complete (4-9-2) OR 3 + 8 both strong
+      const mindPlane = r.counts[4] > 0 && r.counts[9] > 0 && r.counts[2] > 0;
+      const scholarPair = r.counts[3] >= 2 && r.counts[8] >= 2;
+      const knowledgeTriad = r.counts[3] > 0 && r.counts[8] > 0 && (r.driver === 3 || r.driver === 5 || r.conductor === 3 || r.conductor === 5);
+      return mindPlane || scholarPair || knowledgeTriad;
+    },
+    description: "The Knowledge Yoga. This combination blesses the native with exceptional intellectual capacity, academic achievement, and a love of learning. People with Vidya Yog excel in education, research, writing, and any field requiring deep analytical thinking.",
+    mechDetail: (r) => {
+      let parts = [];
+      if (r.counts[4] > 0 && r.counts[9] > 0 && r.counts[2] > 0) parts.push('Mind plane (4·9·2) complete');
+      if (r.counts[3] >= 2 && r.counts[8] >= 2) parts.push(`3 (Jupiter/learning) ×${r.counts[3]} + 8 (Saturn/discipline) ×${r.counts[8]}`);
+      if (r.counts[3] > 0 && r.counts[8] > 0) parts.push('3 + 8 knowledge pair active');
+      return parts.join(' · ');
+    },
+    remedy: "Feed this yoga through continuous learning — read widely, teach others, and write regularly. Wearing green on Wednesdays (Mercury day) enhances intellectual clarity.",
+    highlightNums: (r) => {
+      let nums = [];
+      if (r.counts[4] > 0 && r.counts[9] > 0 && r.counts[2] > 0) nums.push(4, 9, 2);
+      if (r.counts[3] > 0) nums.push(3);
+      if (r.counts[8] > 0) nums.push(8);
+      return [...new Set(nums)];
+    }
+  },
+  {
+    name: "Guru-Mangal Yog",
+    sanskrit: "गुरु मंगल योग",
+    type: "auspicious",
+    detect: (r) => {
+      // Jupiter (3) and Mars (9) both present with at least one strong (×2+)
+      return r.counts[3] > 0 && r.counts[9] > 0 && (r.counts[3] >= 2 || r.counts[9] >= 2);
+    },
+    description: "The Jupiter-Mars Yoga. This powerful combination merges wisdom (Jupiter/3) with courage and energy (Mars/9). It produces individuals with both the vision to dream big and the fire to make it happen. They are natural motivators, combining philosophical depth with executive action.",
+    mechDetail: (r) => `Jupiter 3 ×${r.counts[3]} + Mars 9 ×${r.counts[9]} — wisdom meets drive`,
+    remedy: "Balance contemplation with action. Practice both study (Jupiter) and physical discipline (Mars). Tuesdays and Thursdays are your power days. Wearing red coral with yellow sapphire amplifies this yoga.",
+    highlightNums: () => [3, 9]
+  },
+  {
+    name: "Budh-Aditya Yog",
+    sanskrit: "बुध आदित्य योग",
+    type: "auspicious",
+    detect: (r) => {
+      // Mercury (5) and Sun (1) both present, and friendly Maitri between Driver/Conductor
+      const bothPresent = r.counts[1] > 0 && r.counts[5] > 0;
+      const driverConductorInvolved = [r.driver, r.conductor].includes(1) || [r.driver, r.conductor].includes(5);
+      return bothPresent && driverConductorInvolved;
+    },
+    description: "The Mercury-Sun Yoga. This combination grants exceptional communication skills, sharp intellect, and the ability to influence others through speech and writing. The Sun provides confidence and authority, while Mercury adds analytical precision and verbal eloquence.",
+    mechDetail: (r) => {
+      let parts = [`Sun 1 ×${r.counts[1]} + Mercury 5 ×${r.counts[5]}`];
+      if ([r.driver, r.conductor].includes(1)) parts.push('Sun in seal position');
+      if ([r.driver, r.conductor].includes(5)) parts.push('Mercury in seal position');
+      return parts.join(' · ');
+    },
+    remedy: "Use your gift of communication purposefully — writing, public speaking, or teaching. Green emerald (Mercury) paired with ruby (Sun) strengthens this yoga. Sundays are ideal for important communications.",
+    highlightNums: () => [1, 5]
+  },
+  {
+    name: "Vish Yog",
+    sanskrit: "विष योग",
+    type: "challenging",
+    detect: (r) => {
+      // Saturn (8) + Rahu (4) both strong (×2+ each), or one at ×3+ with the other present
+      const saturnStrong = r.counts[8] >= 2;
+      const rahuStrong = r.counts[4] >= 2;
+      const saturnIntense = r.counts[8] >= 3 && r.counts[4] > 0;
+      const rahuIntense = r.counts[4] >= 3 && r.counts[8] > 0;
+      return (saturnStrong && rahuStrong) || saturnIntense || rahuIntense;
+    },
+    description: "The Poison Yoga. This challenging combination of Saturn (8) and Rahu (4) creates periods of intense difficulty, delays, and karmic lessons. However, those who consciously work through these obstacles develop extraordinary resilience, depth of character, and eventual mastery over adversity.",
+    mechDetail: (r) => `Saturn 8 ×${r.counts[8]} + Rahu 4 ×${r.counts[4]} — heavy karmic weight requiring conscious management`,
+    caution: "Avoid shortcuts and get-rich-quick schemes. Delays are not denials — they are your strengthening periods. Regular meditation and patience are essential. Saturdays require extra caution in major decisions.",
+    remedy: "Donate to the needy on Saturdays. Wear dark blue or black iron ring on the middle finger. Practice patience as a conscious discipline. The struggles of Vish Yog forge the strongest character when faced with grace.",
+    highlightNums: () => [4, 8]
+  },
+  {
+    name: "Ekanga Yog",
+    sanskrit: "एकांग योग",
+    type: "challenging",
+    detect: (r) => {
+      // Imbalanced grid: all numbers concentrated in one half
+      // Top row (4,9,2) vs bottom row (8,1,6) — heavy skew
+      const topCount = r.counts[4] + r.counts[9] + r.counts[2];
+      const bottomCount = r.counts[8] + r.counts[1] + r.counts[6];
+      const total = Object.values(r.counts).reduce((a, b) => a + b, 0);
+      // More than 75% of all digits in either top or bottom half
+      return total >= 6 && (topCount >= total * 0.75 || bottomCount >= total * 0.75);
+    },
+    description: "The One-Sided Yoga. When the vast majority of digits cluster in one half of the grid, the chart becomes lopsided — like a wheel with weight on one side. If top-heavy (4·9·2), the person lives excessively in thoughts and plans without practical grounding. If bottom-heavy (8·1·6), they are stuck in routine without higher vision.",
+    mechDetail: (r) => {
+      const topCount = r.counts[4] + r.counts[9] + r.counts[2];
+      const bottomCount = r.counts[8] + r.counts[1] + r.counts[6];
+      const total = Object.values(r.counts).reduce((a, b) => a + b, 0);
+      if (topCount >= total * 0.75) return `Top-heavy: ${topCount}/${total} digits in Mind row (4·9·2) — over-thinking, under-doing`;
+      return `Bottom-heavy: ${bottomCount}/${total} digits in Practical row (8·1·6) — over-doing, under-thinking`;
+    },
+    caution: "A one-sided grid creates blind spots. If top-heavy, force yourself to take physical action daily. If bottom-heavy, schedule time for reflection, reading, and planning.",
+    remedy: "Consciously develop the weaker half. Top-heavy people should take up physical hobbies (sports, gardening). Bottom-heavy people should cultivate intellectual pursuits (reading, strategy games, journaling).",
+    highlightNums: (r) => {
+      const topCount = r.counts[4] + r.counts[9] + r.counts[2];
+      const bottomCount = r.counts[8] + r.counts[1] + r.counts[6];
+      const total = Object.values(r.counts).reduce((a, b) => a + b, 0);
+      return topCount >= total * 0.75 ? [4, 9, 2] : [8, 1, 6];
+    }
+  }
+];
+
+function detectYogas(r) {
+  return YOGAS.filter(y => y.detect(r)).map(y => ({
+    ...y,
+    mech: y.mechDetail(r),
+    nums: y.highlightNums(r)
+  }));
+}
+
 /* ---------- State Management ---------- */
 let selMonth = null, selSex = null, lastResult = null;
 
@@ -1002,6 +1323,9 @@ function cast() {
   const voidPlanes = PLANES.filter(p => p.absent && p.nums.every(n => counts[n] === 0));
 
   lastResult = { dd, mm: selMonth, yyyy, sex: selSex, driver, conductor, kua, counts, complete, forming, voidPlanes };
+  
+  // Detect yogas
+  lastResult.yogas = detectYogas(lastResult);
   
   renderGrid(lastResult);
   renderReading(lastResult);
@@ -1187,7 +1511,34 @@ function renderReading(r) {
       [r.driver, r.conductor]
     );
 
-  /* 2. Numbers Present */
+  /* 2. Yogas (Special Combinations) */
+  const yogas = r.yogas || [];
+  if (yogas.length > 0) {
+    document.getElementById('yoga-entries').innerHTML = yogas.map(y => {
+      const hoverAttr = y.nums ? `data-hover-nums="${y.nums.join(',')}"` : '';
+      const typeClass = y.type === 'auspicious' ? 'auspicious' : (y.type === 'challenging' ? 'challenging' : 'neutral-yoga');
+      let actionHtml = '';
+      if (y.remedy) actionHtml += `<span class="yoga-remedy">${y.remedy}</span>`;
+      if (y.caution) actionHtml += `<span class="yoga-caution">${y.caution}</span>`;
+      return `<div class="yoga-card ${typeClass}" ${hoverAttr}>
+        <div class="yoga-header">
+          <span class="yoga-name ${typeClass}">${y.name}</span>
+          <span class="yoga-sanskrit">${y.sanskrit}</span>
+          <span class="yoga-type-badge ${typeClass}">${y.type}</span>
+        </div>
+        <div class="yoga-body">
+          ${y.description}
+          <span class="yoga-mech">${y.mech}</span>
+          ${actionHtml}
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('yoga-entries').innerHTML =
+      '<p class="no-yogas">No major yogas detected in this chart. Your strengths manifest through individual number presences and plane formations rather than classical named combinations.</p>';
+  }
+
+  /* 3. Numbers Present */
   const present = Object.entries(r.counts).filter(([, c]) => c > 0);
   document.getElementById('present-entries').innerHTML = present.map(([n, c]) => {
     const t = REPEAT[n][tier(c)];
@@ -1202,7 +1553,7 @@ function renderReading(r) {
     );
   }).join('');
 
-  /* 3. Planes (Yogs) */
+  /* 4. Planes (Yogs) */
   let planeHtml = r.complete.map(p =>
     entry(p.nums.join('·'), p.name, p.full, '', 'plane', null, p.why, p.nums)
   ).join('');
@@ -1221,7 +1572,7 @@ function renderReading(r) {
   document.getElementById('plane-entries').innerHTML = planeHtml ||
     '<div class="entry"><div class="lead">–</div><p>No full planes formed yet. Your strength lies in individual numbers rather than combined lines, suggesting specialized focus over broad activity.</p></div>';
 
-  /* 4. Open Channels (Growth) */
+  /* 5. Open Channels (Growth) */
   const missing = Object.entries(r.counts).filter(([, c]) => c === 0);
   document.getElementById('growth-entries').innerHTML = missing.length ? missing.map(([n]) => {
     const cellInfo = WHY[n];
@@ -1229,16 +1580,22 @@ function renderReading(r) {
     return entry(n, 'open', GROWTH[n], PLANETS[n] + ' · an opportunity for personal growth', 'growth', null, whyDesc, [Number(n)]);
   }).join('') : '<div class="entry"><div class="lead">✓</div><p>All nine seats are held — a rare, completely full square representing balanced options.</p></div>';
 
-  /* 5. Synthesis */
+  /* 6. Synthesis */
   const maxN = present.reduce((a, b) => +b[1] > +a[1] ? b : a);
   let s = 'Your Driver ' + r.driver + ' (' + PLANETS[r.driver].split(' (')[0] + ') rules your daily actions, while Conductor ' +
     r.conductor + ' (' + PLANETS[r.conductor].split(' (')[0] + ') shows your life destination. They are ' + rel + 's. ';
   s += 'The number ' + maxN[0] + ' is the most common digit in your chart, appearing ' + maxN[1] + ' times. This is your strongest energetic influence';
   s += (+maxN[1] >= 4 ? ', and you must watch for its over-expressions.' : '. ');
+  if (yogas.length > 0) {
+    const auspicious = yogas.filter(y => y.type === 'auspicious');
+    const challenging = yogas.filter(y => y.type === 'challenging');
+    if (auspicious.length) s += 'Your chart carries ' + auspicious.map(y => y.name).join(', ') + ' — powerful auspicious combinations that amplify your potential. ';
+    if (challenging.length) s += 'The presence of ' + challenging.map(y => y.name).join(', ') + ' indicates karmic challenges that, when consciously managed, become your greatest sources of strength. ';
+  }
   s += r.complete.length
-    ? 'The complete ' + r.complete.map(p => p.name).join(' and ') + ' planes give this energy a clear path to run on.'
+    ? 'The complete ' + r.complete.map(p => p.name).join(' and ') + ' give this energy a clear path to run on.'
     : (r.forming.length
-        ? 'The ' + r.forming[0].name + ' plane is only one number away from forming — this represents your easiest opportunity for personal balance.'
+        ? 'The ' + r.forming[0].name + ' is only one number away from forming — this represents your easiest opportunity for personal balance.'
         : 'Your chart focuses energy in specific areas rather than drawing lines, highlighting deep, specialized strengths.');
   document.getElementById('synth').textContent = s;
 
@@ -1247,20 +1604,21 @@ function renderReading(r) {
 }
 
 function setupHoverEffects() {
-  const entries = document.querySelectorAll('.entry[data-hover-nums]');
-  entries.forEach(entry => {
-    const numStr = entry.getAttribute('data-hover-nums');
+  // Handle both .entry and .yoga-card elements with data-hover-nums
+  const hoverables = document.querySelectorAll('[data-hover-nums]');
+  hoverables.forEach(el => {
+    const numStr = el.getAttribute('data-hover-nums');
     if (!numStr) return;
     const nums = numStr.split(',').map(Number);
     
-    entry.addEventListener('mouseenter', () => {
+    el.addEventListener('mouseenter', () => {
       nums.forEach(n => {
         const cell = document.querySelector(`.cell[data-num="${n}"]`);
         if (cell) cell.classList.add('highlight');
       });
       
       // Highlight SVG lines for complete plane matches
-      if (entry.classList.contains('plane')) {
+      if (el.classList.contains('plane')) {
         const index = lastResult.complete.findIndex(p => p.nums.every(num => nums.includes(num)));
         if (index !== -1) {
           const line = document.querySelectorAll('.strokes line')[index];
@@ -1269,7 +1627,7 @@ function setupHoverEffects() {
       }
     });
     
-    entry.addEventListener('mouseleave', () => {
+    el.addEventListener('mouseleave', () => {
       nums.forEach(n => {
         const cell = document.querySelector(`.cell[data-num="${n}"]`);
         if (cell) cell.classList.remove('highlight');
@@ -1393,6 +1751,19 @@ function copyReading() {
     if (t.w) text += `  Watch: ${t.w}\n`;
   });
   
+  // Yogas section
+  const yogas = r.yogas || [];
+  if (yogas.length > 0) {
+    text += `\nYOGAS (SPECIAL COMBINATIONS):\n`;
+    yogas.forEach(y => {
+      const typeLabel = y.type === 'auspicious' ? '✦ AUSPICIOUS' : '⚠ CHALLENGING';
+      text += `- ${y.name} (${y.sanskrit}) [${typeLabel}]: ${y.description}\n`;
+      text += `  Detection: ${y.mech}\n`;
+      if (y.remedy) text += `  Remedy: ${y.remedy}\n`;
+      if (y.caution) text += `  Caution: ${y.caution}\n`;
+    });
+  }
+  
   text += `\nPLANES & YOGS:\n`;
   r.complete.forEach(p => { text += `- ${p.name} (COMPLETE): ${p.full}\n`; });
   r.forming.forEach(p => { text += `- ${p.name} (FORMING): Two of three digits present. Developing the missing slot helps close this circuit.\n`; });
@@ -1409,6 +1780,41 @@ function copyReading() {
       btn.style.borderColor = 'var(--cinnabar)';
       btn.style.color = 'var(--cinnabar)';
     }, 1500);
+  });
+}
+
+/* ---------- Touch Tooltip Support ---------- */
+const isTouchDevice = () => window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+if (isTouchDevice()) {
+  // Tap-to-toggle for cell tooltips
+  document.addEventListener('click', (e) => {
+    // Close all open tooltips first
+    document.querySelectorAll('.cell-tooltip.touch-show, .why-tooltip.touch-show').forEach(t => t.classList.remove('touch-show'));
+    
+    // Check if tapped on a cell
+    const cell = e.target.closest('.cell');
+    if (cell) {
+      const tooltip = cell.querySelector('.cell-tooltip');
+      if (tooltip) {
+        e.preventDefault();
+        e.stopPropagation();
+        tooltip.classList.add('touch-show');
+      }
+      return;
+    }
+    
+    // Check if tapped on a why-badge
+    const badge = e.target.closest('.why-badge');
+    if (badge) {
+      const tooltip = badge.querySelector('.why-tooltip');
+      if (tooltip) {
+        e.preventDefault();
+        e.stopPropagation();
+        tooltip.classList.add('touch-show');
+      }
+      return;
+    }
   });
 }
 </script>
