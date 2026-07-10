@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Lo Shu · Interactive Magic Square</title>
+<meta name="description" content="Cast your personal Lo Shu magic square from your birth date. Interactive numerology grid with Ank Jyotish interpretations, element balance, yoga detection, and detailed readings.">
+<meta name="theme-color" content="#FAF6EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1816" media="(prefers-color-scheme: dark)">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lo Shu · Interactive Magic Square">
+<meta property="og:description" content="Cast your personal Lo Shu magic square from your birth date. Interactive numerology grid with Ank Jyotish interpretations, Yogas, and element balance.">
+<meta property="og:image" content="demo.png">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lo Shu · Interactive Magic Square">
+<meta name="twitter:description" content="Cast your personal Lo Shu magic square from your birth date. Interactive numerology grid with detailed Ank Jyotish readings.">
+<meta name="twitter:image" content="demo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,560;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -20,6 +33,33 @@
   --ease-out: cubic-bezier(.22,1,.36,1);
   --ease-brush: cubic-bezier(.65,0,.35,1);
 }
+[data-theme="dark"] {
+  --paper: #1A1816;
+  --paper-deep: #242120;
+  --ink: #E8E2D6;
+  --ink-soft: #9B9488;
+  --cinnabar: #D4644E;
+  --cinnabar-deep: #E87A64;
+  --hair: rgba(232,226,214,.16);
+  --hair-soft: rgba(232,226,214,.08);
+}
+[data-theme="dark"] body::before { opacity: .12; }
+[data-theme="dark"] .loshu { background: var(--paper-deep); }
+[data-theme="dark"] .strokes line { mix-blend-mode: normal; opacity: .55; }
+[data-theme="dark"] .seal::after { background: var(--paper); }
+[data-theme="dark"] .yoga-card { background: linear-gradient(135deg, rgba(26,24,22,0.6), rgba(36,33,32,0.8)); }
+[data-theme="dark"] .entry:hover { background-color: rgba(232,226,214,.03); }
+
+/* ============ THEME TOGGLE ============ */
+.theme-toggle {
+  appearance: none; border: 0; background: transparent;
+  cursor: pointer; font-size: 18px; line-height: 1;
+  padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: background .2s var(--ease-out), transform .3s var(--ease-out);
+  color: var(--ink-soft);
+}
+.theme-toggle:hover { background: var(--hair-soft); transform: rotate(15deg); }
+.theme-toggle:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
@@ -463,6 +503,55 @@ h1 {
   background: var(--cinnabar);
   color: var(--paper);
 }
+.copy-btn:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 2px; }
+
+/* ============ PERSONAL CYCLES ============ */
+.cycle-strip {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px;
+}
+.cycle-card {
+  flex: 1 1 140px; min-width: 120px;
+  border: 1px solid var(--hair); padding: 14px 12px 11px; position: relative;
+  background: linear-gradient(135deg, var(--paper), var(--paper-deep));
+  transition: border-color .25s var(--ease-out), box-shadow .25s var(--ease-out);
+}
+.cycle-card:hover { border-color: var(--cinnabar); box-shadow: 0 4px 16px rgba(174,59,38,.08); }
+.cycle-card .cycle-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 2px;
+}
+.cycle-card .cycle-num {
+  font-family: 'Fraunces', serif; font-size: 30px; font-weight: 560; color: var(--cinnabar); line-height: 1;
+}
+.cycle-card .cycle-planet {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-soft); margin-top: 4px;
+}
+.cycle-card .cycle-desc {
+  font-size: 12.5px; color: var(--ink); line-height: 1.45; margin-top: 8px;
+  border-top: 1px solid var(--hair-soft); padding-top: 8px;
+}
+
+/* ============ REMEDY CARDS ============ */
+.remedy-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px;
+  margin-top: 10px;
+}
+.remedy-chip {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .06em;
+  padding: 6px 8px; border: 1px solid var(--hair); background: var(--paper);
+  text-align: center; color: var(--ink-soft); line-height: 1.35;
+  transition: border-color .2s var(--ease-out);
+}
+.remedy-chip:hover { border-color: var(--cinnabar); }
+.remedy-chip .remedy-icon { display: flex; justify-content: center; align-items: center; height: 18px; margin-bottom: 3px; }
+.remedy-chip .remedy-icon svg { width: 16px; height: 16px; stroke: var(--cinnabar); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.remedy-chip .remedy-val { color: var(--ink); font-weight: 500; display: block; }
+
+/* ============ INLINE SVG ICONS ============ */
+.icon-svg { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.el-bar-label .icon-svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 2px; }
+.theme-toggle .icon-svg { width: 18px; height: 18px; stroke: var(--ink-soft); transition: stroke .25s; }
+.theme-toggle:hover .icon-svg { stroke: var(--ink); }
 
 footer {
   margin-top: 70px; padding-top: 18px; border-top: 1px solid var(--ink);
@@ -631,7 +720,8 @@ footer {
   .err,
   footer,
   .why-badge,
-  .copy-btn {
+  .copy-btn,
+  .theme-toggle {
     display: none !important;
   }
   .frame {
@@ -672,7 +762,10 @@ footer {
     <h1>Lo Shu</h1>
     <div class="hanzi" aria-hidden="true">洛書</div>
   </div>
-  <p class="masthead-note">The magic square carried from the Luo river, read through <b>Ank Jyotish</b>. Every digit of a birth date takes its fixed seat; the pattern of presence — and of excess and absence — is the reading.</p>
+  <div style="display: flex; align-items: flex-end; gap: 16px;">
+    <p class="masthead-note">The magic square carried from the Luo river, read through <b>Ank Jyotish</b>. Every digit of a birth date takes its fixed seat; the pattern of presence — and of excess and absence — is the reading.</p>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode"></button>
+  </div>
 </header>
 
 <div class="switch" role="tablist" aria-label="Views">
@@ -768,13 +861,19 @@ footer {
     <section id="reading-view">
       <div class="reading-head">
         <h2>The Reading</h2>
-        <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
           <span class="mono" id="reading-date" style="margin-right: 10px;"></span>
           <button class="copy-btn" onclick="copyReading()">Copy Text</button>
+          <button class="copy-btn" onclick="copyLink()">Copy Link</button>
         </div>
       </div>
       <p class="synth" id="synth"></p>
-      
+
+      <div class="rsec" id="sec-cycles">
+        <h3>Current cycles · personal year · month · day</h3>
+        <div class="cycle-strip" id="cycle-strip"></div>
+      </div>
+
       <div class="rsec" id="sec-seals">
         <h3>The three seals</h3>
         <div id="seal-entries"></div>
@@ -835,6 +934,26 @@ footer {
 /* =====================================================================
    INTERPRETATION DATABASE
    ===================================================================== */
+
+/* ---- Inline SVG Icon Library ---- */
+const ICON = {
+  // Element icons for the balance bars
+  fire:    '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-4-4-6-4-10z"/></svg>',
+  earth:   '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 18l4-6 3 4 4-8 5 10H4z"/></svg>',
+  metal:   '<svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12,2 15,10 22,10 16,15 18,22 12,18 6,22 8,15 2,10 9,10"/></svg>',
+  water:   '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2c-3 5-7 8-7 13a7 7 0 0 0 14 0c0-5-4-8-7-13z"/></svg>',
+  wood:    '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 22V8m0 0c-2-3-5-5-5-5s3 1 5 3c2-2 5-3 5-3s-3 2-5 5zm-3 4c-1-2-3-3-3-3s2 0 3 1m6-1c1-2 3-3 3-3s-2 0-3 1"/></svg>',
+  // Remedy chip icons
+  palette: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1.5" fill="currentColor" stroke="none"/><path d="M14 17a2 2 0 0 1-4 0c0-1.5 2-4 2-4s2 2.5 2 4z"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none"/></svg>',
+  gem:     '<svg viewBox="0 0 24 24"><polygon points="6,3 18,3 22,9 12,21 2,9"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="12" y1="21" x2="8" y2="9"/><line x1="12" y1="21" x2="16" y2="9"/><line x1="6" y1="3" x2="8" y2="9"/><line x1="18" y1="3" x2="16" y2="9"/></svg>',
+  // Theme toggle
+  sun:     '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  moon:    '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  // Utility
+  check:   '<svg class="icon-svg" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+};
+
 const SQUARE = [4, 9, 2, 3, 5, 7, 8, 1, 6];
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 const PLANETS = {
@@ -984,6 +1103,32 @@ const GROWTH = {
   7: "Self-reflection: Spend structured time alone without your phone, write in a journal, and look for lessons in life events.",
   8: "Steady completion: Practice finishing projects you start before jumping to new ones to build long-term focus.",
   9: "Finding a purpose: Direct your energy toward a cause you care about and keep active through regular exercise."
+};
+
+/* ---- Specific Remedies for missing numbers ---- */
+const REMEDIES = {
+  1: { color: "Orange / Gold", day: "Sunday", gem: "Ruby, Garnet", action: "Offer water to the Sun at sunrise; practice clear, direct communication daily" },
+  2: { color: "White / Cream", day: "Monday", gem: "Pearl, Moonstone", action: "Moon gazing, practice quiet listening, nurture close relationships" },
+  3: { color: "Yellow / Gold", day: "Thursday", gem: "Yellow Sapphire, Citrine", action: "Donate turmeric, teach or mentor someone, read widely" },
+  4: { color: "Blue-grey / Smoky", day: "Saturday (Rahu)", gem: "Hessonite (Gomed)", action: "Build a daily routine, organize your physical space, practice discipline" },
+  5: { color: "Green", day: "Wednesday", gem: "Emerald", action: "Breathing exercises, try new activities, practice adaptability" },
+  6: { color: "White / Pastel", day: "Friday", gem: "Diamond, Opal, Zircon", action: "Surround yourself with beauty, take care of your home, practice self-care" },
+  7: { color: "Grey-white / Smoky", day: "Monday (Ketu)", gem: "Cat's Eye (Lehsunia)", action: "Journal daily, spend quiet time without screens, seek spiritual study" },
+  8: { color: "Dark Blue / Black", day: "Saturday", gem: "Blue Sapphire, Amethyst", action: "Complete what you start, charity on Saturdays, practice patience" },
+  9: { color: "Red / Coral", day: "Tuesday", gem: "Red Coral (Moonga)", action: "Regular exercise, direct energy toward a cause you believe in" }
+};
+
+/* ---- Personal Year / Month / Day cycle interpretations ---- */
+const PERSONAL_YEAR = {
+  1: { theme: "New Beginnings", desc: "A year of fresh starts, independence, and planting seeds. Take initiative on personal goals. It's time to lead, not follow." },
+  2: { theme: "Patience & Partnership", desc: "A year of cooperation, diplomacy, and nurturing relationships. Progress comes through patience, not force. Focus on partnerships." },
+  3: { theme: "Creativity & Expression", desc: "A year of social expansion, joy, and creative output. Express yourself freely through art, writing, or communication. Opportunities multiply." },
+  4: { theme: "Foundation & Hard Work", desc: "A year of discipline, structure, and building solid foundations. Expect to work harder than usual — the results compound over time." },
+  5: { theme: "Change & Freedom", desc: "A year of major shifts, travel, and breaking free from old patterns. Embrace change rather than resisting it. Adventure calls." },
+  6: { theme: "Responsibility & Home", desc: "A year focused on family, home, and community responsibility. Nurture your closest relationships. Domestic matters take priority." },
+  7: { theme: "Reflection & Inner Growth", desc: "A year of introspection, spiritual development, and knowledge-seeking. Slow down, study, meditate. The answers are within." },
+  8: { theme: "Power & Achievement", desc: "A year of material success, authority, and recognition. Financial opportunities peak. Step into leadership roles with confidence." },
+  9: { theme: "Completion & Release", desc: "A year of endings, letting go, and tying up loose ends. Clear out what no longer serves you to make space for the new cycle." }
 };
 
 /* ---- Planes: complete / forming / absent readings ---- */
@@ -1330,6 +1475,9 @@ function cast() {
   renderGrid(lastResult);
   renderReading(lastResult);
   document.getElementById('tab-read').disabled = false;
+
+  // Update URL hash for shareable links
+  updateUrlHash(lastResult);
 }
 
 /* ---------- Grid Render ---------- */
@@ -1422,11 +1570,11 @@ function renderElementBalance(r) {
   container.innerHTML = '';
   
   const elements = [
-    { name: "Fire", color: "#AE3B26", icon: "🔥", count: r.counts[9], why: "South direction. Governs fame, public image, enthusiasm, and warmth." },
-    { name: "Earth", color: "#D6A257", icon: "⛰️", count: r.counts[2] + r.counts[5] + r.counts[8], why: "Center, SW, NE directions. Governs stability, relationships, wisdom, and grounding." },
-    { name: "Metal", color: "#8F9499", icon: "⚔️", count: r.counts[6] + r.counts[7], why: "West & NW directions. Governs creativity, helpful mentors, and clear structure." },
-    { name: "Water", color: "#2B4C7E", icon: "💧", count: r.counts[1], why: "North direction. Governs career, opportunities, flow, and communication." },
-    { name: "Wood", color: "#4A7C59", icon: "🌱", count: r.counts[3] + r.counts[4], why: "East & SE directions. Governs growth, health, wealth accumulation, and discipline." }
+    { name: "Fire", color: "#AE3B26", icon: ICON.fire, count: r.counts[9], why: "South direction. Governs fame, public image, enthusiasm, and warmth." },
+    { name: "Earth", color: "#D6A257", icon: ICON.earth, count: r.counts[2] + r.counts[5] + r.counts[8], why: "Center, SW, NE directions. Governs stability, relationships, wisdom, and grounding." },
+    { name: "Metal", color: "#8F9499", icon: ICON.metal, count: r.counts[6] + r.counts[7], why: "West & NW directions. Governs creativity, helpful mentors, and clear structure." },
+    { name: "Water", color: "#2B4C7E", icon: ICON.water, count: r.counts[1], why: "North direction. Governs career, opportunities, flow, and communication." },
+    { name: "Wood", color: "#4A7C59", icon: ICON.wood, count: r.counts[3] + r.counts[4], why: "East & SE directions. Governs growth, health, wealth accumulation, and discipline." }
   ];
   
   elements.forEach(el => {
@@ -1572,13 +1720,19 @@ function renderReading(r) {
   document.getElementById('plane-entries').innerHTML = planeHtml ||
     '<div class="entry"><div class="lead">–</div><p>No full planes formed yet. Your strength lies in individual numbers rather than combined lines, suggesting specialized focus over broad activity.</p></div>';
 
-  /* 5. Open Channels (Growth) */
+  /* 5. Open Channels (Growth) with Remedy Cards */
   const missing = Object.entries(r.counts).filter(([, c]) => c === 0);
   document.getElementById('growth-entries').innerHTML = missing.length ? missing.map(([n]) => {
     const cellInfo = WHY[n];
     const whyDesc = `${cellInfo.element} element (${cellInfo.direction} direction). Developing this represents building strength in ${cellInfo.area}.`;
-    return entry(n, 'open', GROWTH[n], PLANETS[n] + ' · an opportunity for personal growth', 'growth', null, whyDesc, [Number(n)]);
-  }).join('') : '<div class="entry"><div class="lead">✓</div><p>All nine seats are held — a rare, completely full square representing balanced options.</p></div>';
+    const rem = REMEDIES[n];
+    const remedyHtml = `<div class="remedy-grid">
+      <div class="remedy-chip"><span class="remedy-icon">${ICON.palette}</span>COLOR<span class="remedy-val">${rem.color}</span></div>
+      <div class="remedy-chip"><span class="remedy-icon">${ICON.calendar}</span>DAY<span class="remedy-val">${rem.day}</span></div>
+      <div class="remedy-chip"><span class="remedy-icon">${ICON.gem}</span>GEM<span class="remedy-val">${rem.gem}</span></div>
+    </div>`;
+    return entry(n, 'open', GROWTH[n] + remedyHtml, PLANETS[n] + ' · ' + rem.action, 'growth', null, whyDesc, [Number(n)]);
+  }).join('') : `<div class="entry"><div class="lead">${ICON.check}</div><p>All nine seats are held — a rare, completely full square representing balanced options.</p></div>`;
 
   /* 6. Synthesis */
   const maxN = present.reduce((a, b) => +b[1] > +a[1] ? b : a);
@@ -1601,6 +1755,9 @@ function renderReading(r) {
 
   // Add the hover highlighting connections
   setupHoverEffects();
+
+  // Render personal cycle cards
+  renderCycles(r);
 }
 
 function setupHoverEffects() {
@@ -1729,6 +1886,9 @@ function resetForm() {
   // Reset reading tab
   document.getElementById('tab-read').disabled = true;
   showView('grid');
+
+  // Clear URL hash
+  history.replaceState(null, '', window.location.pathname);
 }
 
 function copyReading() {
@@ -1756,7 +1916,7 @@ function copyReading() {
   if (yogas.length > 0) {
     text += `\nYOGAS (SPECIAL COMBINATIONS):\n`;
     yogas.forEach(y => {
-      const typeLabel = y.type === 'auspicious' ? '✦ AUSPICIOUS' : '⚠ CHALLENGING';
+      const typeLabel = y.type === 'auspicious' ? '[+] AUSPICIOUS' : '[!] CHALLENGING';
       text += `- ${y.name} (${y.sanskrit}) [${typeLabel}]: ${y.description}\n`;
       text += `  Detection: ${y.mech}\n`;
       if (y.remedy) text += `  Remedy: ${y.remedy}\n`;
@@ -1768,6 +1928,27 @@ function copyReading() {
   r.complete.forEach(p => { text += `- ${p.name} (COMPLETE): ${p.full}\n`; });
   r.forming.forEach(p => { text += `- ${p.name} (FORMING): Two of three digits present. Developing the missing slot helps close this circuit.\n`; });
   r.voidPlanes.forEach(p => { text += `- ${p.name} (OPEN/VOID): ${p.absent}\n`; });
+  
+  // Growth channels with remedies
+  const missingNums = Object.entries(r.counts).filter(([, c]) => c === 0);
+  if (missingNums.length > 0) {
+    text += `\nOPEN CHANNELS (GROWTH & REMEDIES):\n`;
+    missingNums.forEach(([n]) => {
+      const rem = REMEDIES[n];
+      text += `- Number ${n}: ${GROWTH[n]}\n`;
+      text += `  Color: ${rem.color} | Day: ${rem.day} | Gem: ${rem.gem}\n`;
+      text += `  Action: ${rem.action}\n`;
+    });
+  }
+
+  // Personal cycles
+  const py = calcPersonalYear(r.dd, r.mm, r.yyyy);
+  const pm = calcPersonalMonth(py);
+  const pd = calcPersonalDay(pm);
+  text += `\nCURRENT PERSONAL CYCLES (${new Date().getFullYear()}):\n`;
+  text += `- Personal Year: ${py} (${PERSONAL_YEAR[py].theme}) — ${PERSONAL_YEAR[py].desc}\n`;
+  text += `- Personal Month: ${pm} (${PERSONAL_YEAR[pm].theme}) — ${PERSONAL_YEAR[pm].desc}\n`;
+  text += `- Personal Day: ${pd} (${PERSONAL_YEAR[pd].theme}) — ${PERSONAL_YEAR[pd].desc}\n`;
   
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('.copy-btn');
@@ -1816,6 +1997,139 @@ if (isTouchDevice()) {
       return;
     }
   });
+}
+
+/* ---------- Theme Toggle ---------- */
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('loshu-theme', next);
+  document.getElementById('theme-toggle').innerHTML = next === 'dark' ? ICON.moon : ICON.sun;
+}
+
+// Apply saved theme immediately (prevents FOUC)
+(function initTheme() {
+  const saved = localStorage.getItem('loshu-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved || (prefersDark ? 'dark' : 'light');
+  document.getElementById('theme-toggle').innerHTML = theme === 'dark' ? ICON.moon : ICON.sun;
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+
+/* ---------- URL Hash State ---------- */
+function updateUrlHash(r) {
+  const hash = `${r.dd}-${r.mm}-${r.yyyy}-${r.sex}`;
+  if (window.location.hash !== '#' + hash) {
+    history.replaceState(null, '', '#' + hash);
+  }
+}
+
+function parseUrlHash() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+  const parts = hash.split('-');
+  if (parts.length < 4) return;
+  const [dd, mm, yyyy, sex] = parts;
+  if (!dd || !mm || !yyyy || !sex) return;
+  if (+dd < 1 || +dd > 31 || +mm < 1 || +mm > 12 || +yyyy < 1000 || +yyyy > 2100) return;
+  if (sex !== 'M' && sex !== 'F') return;
+
+  // Fill in the form
+  document.getElementById('dd').value = dd;
+  document.getElementById('yyyy').value = yyyy;
+  selMonth = +mm;
+  [...mwrap.children].forEach((c, idx) => {
+    if (idx === +mm - 1) c.classList.add('on');
+    else c.classList.remove('on');
+  });
+  selSex = sex;
+  [...swrap.children].forEach(c => {
+    if (c.dataset.s === sex) c.classList.add('on');
+    else c.classList.remove('on');
+  });
+  cast();
+}
+
+// Auto-load from URL hash on page load
+parseUrlHash();
+
+/* ---------- Copy Shareable Link ---------- */
+function copyLink() {
+  if (!lastResult) return;
+  const url = window.location.origin + window.location.pathname + '#' +
+    lastResult.dd + '-' + lastResult.mm + '-' + lastResult.yyyy + '-' + lastResult.sex;
+  navigator.clipboard.writeText(url).then(() => {
+    const btns = document.querySelectorAll('.copy-btn');
+    const btn = btns[1]; // The "Copy Link" button
+    if (!btn) return;
+    const oldText = btn.textContent;
+    btn.textContent = 'COPIED!';
+    btn.style.borderColor = 'green';
+    btn.style.color = 'green';
+    setTimeout(() => {
+      btn.textContent = oldText;
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 1500);
+  });
+}
+
+/* ---------- Personal Cycle Calculations ---------- */
+function calcPersonalYear(dd, mm, yyyy) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  return reduce1([...String(dd), ...String(mm), ...String(currentYear)].reduce((a, d) => a + +d, 0));
+}
+
+function calcPersonalMonth(personalYear) {
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  return reduce1(personalYear + currentMonth);
+}
+
+function calcPersonalDay(personalMonth) {
+  const now = new Date();
+  const currentDay = now.getDate();
+  return reduce1(personalMonth + currentDay);
+}
+
+function renderCycles(r) {
+  const py = calcPersonalYear(r.dd, r.mm, r.yyyy);
+  const pm = calcPersonalMonth(py);
+  const pd = calcPersonalDay(pm);
+  const now = new Date();
+  const yearLabel = now.getFullYear();
+  const monthLabel = MONTHS[now.getMonth()];
+  const dayLabel = now.getDate() + ' ' + monthLabel;
+
+  const pyInfo = PERSONAL_YEAR[py];
+  const pmInfo = PERSONAL_YEAR[pm];
+  const pdInfo = PERSONAL_YEAR[pd];
+
+  document.getElementById('cycle-strip').innerHTML = `
+    <div class="cycle-card">
+      <div class="cycle-label">Personal Year · ${yearLabel}</div>
+      <div class="cycle-num">${py}</div>
+      <div class="cycle-planet">${PLANETS[py].split(' (')[0]} · ${pyInfo.theme}</div>
+      <div class="cycle-desc">${pyInfo.desc}</div>
+    </div>
+    <div class="cycle-card">
+      <div class="cycle-label">Personal Month · ${monthLabel}</div>
+      <div class="cycle-num">${pm}</div>
+      <div class="cycle-planet">${PLANETS[pm].split(' (')[0]} · ${pmInfo.theme}</div>
+      <div class="cycle-desc">${pmInfo.desc}</div>
+    </div>
+    <div class="cycle-card">
+      <div class="cycle-label">Personal Day · ${dayLabel}</div>
+      <div class="cycle-num">${pd}</div>
+      <div class="cycle-planet">${PLANETS[pd].split(' (')[0]} · ${pdInfo.theme}</div>
+      <div class="cycle-desc">${pdInfo.desc}</div>
+    </div>
+  `;
 }
 </script>
 </body>
